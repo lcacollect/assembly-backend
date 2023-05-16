@@ -1,0 +1,65 @@
+import pytest
+from lcaconfig.connection import create_postgres_engine
+from mixer.backend.sqlalchemy import Mixer
+from pytest_alembic.config import Config
+from sqlalchemy.orm import sessionmaker
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from models.assembly import Assembly
+from models.epd import EPD
+
+
+@pytest.fixture
+async def assemblies(db, project_id):
+    assemblies = []
+    async with AsyncSession(db) as session:
+        for i in range(3):
+            assembly = Assembly(
+                name=f"Assembly {i}",
+                category="My Category",
+                meta_fields={},
+                project_id=project_id,
+            )
+            session.add(assembly)
+            assemblies.append(assembly)
+        await session.commit()
+
+    yield assemblies
+
+
+@pytest.fixture
+async def epds(db) -> list[EPD]:
+    session = sessionmaker(bind=create_postgres_engine(as_async=False))
+    with session() as _session:
+        mixer = Mixer(session=_session, commit=True)
+        epds = mixer.cycle(3).blend(
+            EPD,
+            gwp_by_phases={"A1": 10},
+            odp_by_phases={"A1": 10},
+            ap_by_phases={"A1": 10},
+            ep_by_phases={"A1": 10},
+            pocp_by_phases={"A1": 10},
+            penre_by_phases={"A1": 10},
+            pere_by_phases={"A1": 10},
+            meta_fields={},
+        )
+        [_session.refresh(epd) for epd in epds]
+
+    yield epds
+
+
+@pytest.fixture
+def epd(epds) -> EPD:
+    yield epds[0]
+
+
+@pytest.fixture
+def alembic_config():
+    """Override this fixture to configure the exact alembic context setup required."""
+    yield Config()
+
+
+@pytest.fixture
+def alembic_engine(postgres):
+    """Override this fixture to provide pytest-alembic powered tests with a database handle."""
+    yield create_postgres_engine(as_async=False)

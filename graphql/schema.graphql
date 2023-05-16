@@ -1,0 +1,193 @@
+directive @keys(fields: String!) on OBJECT
+
+input AssemblyLayerDeleteInput {
+  id: String!
+}
+
+input AssemblyLayerInput {
+  epdId: String!
+  id: String
+  name: String
+  conversionFactor: Float
+}
+
+input AssemblyLayerUpdateInput {
+  id: String!
+  epdId: String
+  name: String
+  conversionFactor: Float
+}
+
+"""Date (isoformat)"""
+scalar Date
+
+input EPDFilters {
+  id: FilterOptions = null
+  unit: FilterOptions = null
+  name: FilterOptions = null
+  category: FilterOptions = null
+  source: FilterOptions = null
+  type: FilterOptions = null
+  region: FilterOptions = null
+  owner: FilterOptions = null
+}
+
+input EPDSort {
+  name: SortOptions = null
+  unit: SortOptions = null
+  category: SortOptions = null
+  source: SortOptions = null
+  type: SortOptions = null
+  region: SortOptions = null
+  owner: SortOptions = null
+}
+
+input FilterOptions {
+  equal: String = null
+  contains: String = null
+  startsWith: String = null
+  endsWith: String = null
+  isEmpty: Boolean = null
+  isNotEmpty: Boolean = null
+  isAnyOf: [String!] = null
+}
+
+type GraphQLAssembly {
+  id: String!
+  name: String!
+  category: String!
+  lifeTime: Float!
+  metaFields: JSON!
+  unit: String!
+  conversionFactor: Float!
+  description: String!
+  layers: [GraphQLAssemblyLayer!]!
+  gwp(phases: [String!] = null): Float!
+}
+
+type GraphQLAssemblyLayer @keys(fields: "project_id") {
+  id: String
+  name: String
+  conversionFactor: Float
+  projectId: ID! @external
+  epdId: String!
+  epdName: String!
+}
+
+type GraphQLEPD {
+  id: String!
+  name: String!
+  category: String!
+  gwpByPhases: JSON!
+  odpByPhases: JSON!
+  apByPhases: JSON!
+  epByPhases: JSON!
+  pocpByPhases: JSON!
+  penreByPhases: JSON!
+  pereByPhases: JSON!
+  version: String!
+  unit: String
+  expirationDate: Date!
+  dateUpdated: Date!
+  source: String!
+  sourceData: String!
+  owner: String!
+  region: String!
+  type: String!
+  gwp(phases: [String!] = null): Float!
+  odp(phases: [String!] = null): Float!
+  ap(phases: [String!] = null): Float!
+  ep(phases: [String!] = null): Float!
+  pocp(phases: [String!] = null): Float!
+  originId: String
+}
+
+type GraphQLEPDConnection {
+  pageInfo: PageInfo!
+  edges: [GraphQLEPDEdge!]!
+  numEdges: Int!
+}
+
+type GraphQLEPDEdge {
+  node: GraphQLEPD!
+  cursor: String!
+}
+
+type GraphQLProjectEPD @keys(fields: "project_id") {
+  id: String!
+  name: String!
+  category: String!
+  gwpByPhases: JSON!
+  odpByPhases: JSON!
+  apByPhases: JSON!
+  epByPhases: JSON!
+  pocpByPhases: JSON!
+  penreByPhases: JSON!
+  pereByPhases: JSON!
+  version: String!
+  unit: String
+  expirationDate: Date!
+  dateUpdated: Date!
+  source: String!
+  sourceData: String!
+  owner: String!
+  region: String!
+  type: String!
+  gwp(phases: [String!] = null): Float!
+  odp(phases: [String!] = null): Float!
+  ap(phases: [String!] = null): Float!
+  ep(phases: [String!] = null): Float!
+  pocp(phases: [String!] = null): Float!
+  originId: String!
+  kgPerM3: Float
+  kgPerM2: Float
+  thickness: Float
+  assemblies: [GraphQLAssembly!]
+  projectId: ID! @external
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+type Mutation {
+  addProjectEpd(projectId: String!, originId: String!): GraphQLProjectEPD!
+  updateProjectEpd(id: String!, kgPerM3: Float = null, kgPerM2: Float = null, thickness: Float = null): GraphQLProjectEPD!
+  deleteProjectEpd(id: String!): String!
+  addAssembly(name: String!, category: String!, projectId: String!, description: String, lifeTime: Float = 50, metaFields: JSON = null, conversionFactor: Float = 1): GraphQLAssembly!
+  deleteAssembly(id: String!): String!
+  updateAssembly(id: String!, name: String = null, category: String = null, description: String = null, lifeTime: Float = null, metaFields: JSON = null, conversionFactor: Float = null): GraphQLAssembly!
+  addAssemblyLayers(id: String!, layers: [AssemblyLayerInput!]!): [GraphQLAssemblyLayer!]!
+  deleteAssemblyLayers(id: String!, layers: [AssemblyLayerDeleteInput!]!): [String!]!
+  updateAssemblyLayers(id: String!, layers: [AssemblyLayerUpdateInput!]!): [GraphQLAssemblyLayer!]!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+input ProjectEPDFilters {
+  name: FilterOptions = null
+  unit: SortOptions = null
+  category: FilterOptions = null
+  projectId: FilterOptions = null
+  source: FilterOptions = null
+  type: FilterOptions = null
+  region: FilterOptions = null
+  owner: FilterOptions = null
+}
+
+type Query {
+  assemblies(projectId: String!): [GraphQLAssembly!]!
+  epds(filters: EPDFilters = null, sortBy: EPDSort = null, count: Int! = 50, after: String): GraphQLEPDConnection!
+  projectEpds(projectId: String!, filters: ProjectEPDFilters = null): [GraphQLProjectEPD!]!
+}
+
+enum SortOptions {
+  ASC
+  DSC
+}

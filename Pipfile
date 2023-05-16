@@ -1,0 +1,45 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[[source]]
+url = "https://azure:${ARTIFACTS_TOKEN_BACKEND_PACKAGES}@pkgs.dev.azure.com/arkitema/lca-platform/_packaging/backend-packages/pypi/simple/"
+verify_ssl = true
+name = "azure-artifacts"
+
+[packages]
+fastapi = {extras = ["all"], version = "*"}
+uvicorn = {extras = ["standard"], version = "*"}
+strawberry-graphql = {extras = ["fastapi"], version = "*"}
+fastapi-azure-auth = "*"
+asyncpg = "*"
+sqlmodel = "*"
+alembic = "*"
+tenacity = "*"
+httpx = "*"
+sqlalchemy = {extras = ["asyncio"], version = "*"}
+lcaconfig = {version = "==1.6.0", index="azure-artifacts"}
+
+[dev-packages]
+pydevd-pycharm = "*"
+pytest = "*"
+pytest-asyncio = "*"
+pytest-env = "*"
+black = "*"
+asgi-lifespan="*"
+docker = "*"
+pre-commit = "*"
+sqlalchemy-stubs = "*"
+pytest-datafixtures = "*"
+mixer = "*"
+psycopg2-binary = "*"
+pytest_httpx = "*"
+isort = "*"
+pytest-alembic = "*"
+pytest-mock = "*"
+pytest-cov = "*"
+pytest-azurepipelines = "*"
+
+[requires]
+python_version = "3.11"

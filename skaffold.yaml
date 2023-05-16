@@ -1,0 +1,66 @@
+apiVersion: skaffold/v4beta1
+kind: Config
+metadata:
+  name: assembly
+build:
+  artifacts:
+  - image: lca/assembly
+    sync:
+      manual:
+      - src: src/**/*.py
+        dest: /app/src
+        strip: src
+      hooks:
+        after:
+        - container:
+            command:
+            - bash
+            - /app/export_schema.sh
+        - host:
+            command:
+            - bash
+            - extract_schema.sh
+            os:
+            - darwin
+            - linux
+    docker:
+      dockerfile: ./Dockerfile
+      buildArgs:
+        ARTIFACTS_TOKEN_BACKEND_PACKAGES: '{{ .ARTIFACTS_TOKEN_BACKEND_PACKAGES }}'
+        BUILD_STAGE: DEV
+        BUILD_VERSION: DEV
+  - image: lca/rover
+    context: ../
+    docker:
+      dockerfile: ../router/Dockerfile
+manifests:
+  helm:
+    flags:
+      upgrade:
+      - --install
+    releases:
+    - name: dev
+      chartPath: helm
+      namespace: assembly
+      setValues:
+        appDomain: localhost:4000
+        appProtocol: http
+        db.ssl: "false"
+        deployType: DEV
+        imageKey.registry: lca/assembly
+        imageKey.repository: lca/assembly
+        imageKey.tag: lca/assembly
+      createNamespace: true
+deploy:
+  helm: {}
+portForward:
+- resourceType: service
+  resourceName: backend-service
+  namespace: assembly
+  port: 8000
+  localPort: 4000
+- resourceType: service
+  resourceName: database-service
+  namespace: assembly
+  port: 5432
+  localPort: 5434

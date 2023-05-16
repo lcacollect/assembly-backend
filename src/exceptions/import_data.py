@@ -1,0 +1,2 @@
+class EPDParseError(Exception):
+    pass

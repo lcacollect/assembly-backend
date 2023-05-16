@@ -1,0 +1,42 @@
+{
+  "startIndex": 0,
+  "pageSize": 1,
+  "totalCount": 1719,
+  "data": [
+    {
+      "languages": [
+        "de"
+      ],
+      "name": "3- und 5-Schicht Massivholzplatte (Durchschnitt DE)",
+      "uuid": "f63ac879-fa7d-4f91-813e-e816cbdf1927",
+      "version": "00.00.025",
+      "geo": "DE",
+      "classific": "Holz / Holzwerkstoffe / 3- und 5-Schichtplatten",
+      "classificId": "3.2.01",
+      "classificSystem": "OEKOBAU.DAT",
+      "type": "EPD",
+      "refYear": 2020,
+      "validUntil": 2025,
+      "compliance": [
+        {
+          "name": "EN 15804",
+          "uuid": "b00f9ec0-7874-11e3-981f-0800200c9a66"
+        }
+      ],
+      "owner": "Thünen-Institut für Holzforschung",
+      "subType": "representative dataset",
+      "dataSources": [
+        {
+          "uuid": "28d74cc0-db8b-4d7e-bc44-5f6d56ce0c4a",
+          "name": "GaBi database (general)"
+        },
+        {
+          "uuid": "0115289e-52f0-4920-bc7e-57b1c96aec8d",
+          "name": "GaBi database SP40 2020"
+        }
+      ],
+      "nodeid": "OEKOBAU.DAT",
+      "dsType": "Process"
+    }
+  ]
+}

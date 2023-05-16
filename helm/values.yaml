@@ -1,0 +1,39 @@
+# Default values for backend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: assembly
+
+appDomain: api.lca.arkitema.com
+appProtocol: https
+deployType: "PROD"
+acrSecret: acr-credentials
+
+imageKey:
+  registry: arkitema.azurecr.io
+  repository: assembly
+  tag: 361
+
+db:
+  appName: database
+  serviceName: database-service
+  databaseName: assembly
+  configmap: db-config
+  replicas: 1
+  dockerImageTag: 13.1-alpine
+  volume: assembly-database-volume
+  pvc: database-pvc
+  port: 5432
+  secret: postgres-secret
+  localVolumePath: "/mnt/minikube/assembly"
+  ssl: true
+
+backend:
+  appName: backend
+  serviceName: backend-service
+  configmap: backend-config
+  routerUrl: http://router-service.router:4000
+  replicas: 1
+  servicePort: 8000
+  ecoplatformToken: "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjaHJrIiwiaXNzIjoiRUNPUE9SVEFMIiwiYXVkIjoiYW55IiwidmVyIjoiNy4yLjEiLCJwZXJtaXNzaW9ucyI6WyJ1c2VyOnJlYWQsd3JpdGU6MTE4Iiwic3RvY2s6cmVhZCxleHBvcnQ6MiIsInN0b2NrOnJlYWQsZXhwb3J0OjEiXSwicm9sZXMiOltdLCJpYXQiOjE2NTcwMjIxMzMsImV4cCI6MTY2NDkwNjEzMywiZW1haWwiOiJjaHJrQGFya2l0ZW1hLmNvbSIsInRpdGxlIjoiIiwiZmlyc3ROYW1lIjoiQ2hyaXN0aWFuIiwibGFzdE5hbWUiOiJLb25nc2dhYXJkIiwiZ2VuZXJhdGVOZXdUb2tlbnMiOmZhbHNlLCJqb2JQb3NpdGlvbiI6IiIsImFkZHJlc3MiOnsiY2l0eSI6IiIsInppcENvZGUiOiIiLCJjb3VudHJ5IjoiREsiLCJzdHJlZXQiOiIifSwib3JnYW5pemF0aW9uIjp7fSwidXNlckdyb3VwcyI6W3sidXNlckdyb3VwTmFtZSI6InJlZ2lzdGVyZWRfdXNlcnMiLCJ1c2VyR3JvdXBPcmdhbml6YXRpb25OYW1lIjoiRGVmYXVsdCBPcmdhbml6YXRpb24ifV0sImFkbWluaXN0cmF0ZWRPcmdhbml6YXRpb25zTmFtZXMiOiIiLCJwaG9uZSI6IiIsImRzcHVycG9zZSI6IlJlYWQgRVBEIGRhdGEiLCJzZWN0b3IiOiIiLCJpbnN0aXR1dGlvbiI6IkFya2l0ZW1hIn0.1HfmC9qLvJojVTojAjt9Wq9QjHW3ZoFH_4u3GU-Gg-LgOxc4Ths_EiOT9g4bpjB0VMTrVwUIlE5lJWGZepoE2_PGybBS2XV4-StrlpAqB9dCPt-z6qHnCeHnJXyh_VL6IvHc6PSFyX_onCoEu91pAZ2jEjNvsjVOFzvFOqBUiA8"
+

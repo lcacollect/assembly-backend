@@ -1,0 +1,175 @@
+{
+  "flowInformation": {
+    "dataSetInformation": {
+      "UUID": "8fc69490-4aad-c4a4-9ecb-c9e76c97038e",
+      "name": {
+        "baseName": [
+          {
+            "value": "AQUAPANEL® Cement Board Rooftop 6 mm ",
+            "lang": "de"
+          }
+        ]
+      },
+      "classificationInformation": {
+        "classification": [
+          {
+            "class": [
+              {
+                "value": "Komposite",
+                "level": 0,
+                "classId": "10"
+              },
+              {
+                "value": "Systembauteile",
+                "level": 1,
+                "classId": "10.1"
+              },
+              {
+                "value": "Decken",
+                "level": 2,
+                "classId": "10.1.05"
+              }
+            ],
+            "name": "OEKOBAU.DAT"
+          }
+        ]
+      },
+      "other": {
+        "anies": [
+          {
+            "Material": [
+              {
+                "BulkDetails": {
+                  "Name": {
+                    "value": "Material"
+                  },
+                  "PropertyData": [
+                    {
+                      "Data": {
+                        "value": "1250",
+                        "format": "float"
+                      },
+                      "property": "pr1"
+                    },
+                    {
+                      "Data": {
+                        "value": "9.5",
+                        "format": "float"
+                      },
+                      "property": "pr3"
+                    },
+                    {
+                      "Data": {
+                        "value": "0.006",
+                        "format": "float"
+                      },
+                      "property": "pr4"
+                    }
+                  ]
+                }
+              }
+            ],
+            "Metadata": {
+              "PropertyDetails": [
+                {
+                  "id": "pr1",
+                  "Name": {
+                    "value": "Gross density"
+                  },
+                  "Units": {
+                    "Unit": [
+                      {
+                        "Name": "kg"
+                      },
+                      {
+                        "Name": "m",
+                        "power": -3
+                      }
+                    ],
+                    "name": "kg/m^3",
+                    "description": "kilograms per cubic metre"
+                  }
+                },
+                {
+                  "id": "pr3",
+                  "Name": {
+                    "value": "Grammage"
+                  },
+                  "Units": {
+                    "Unit": [
+                      {
+                        "Name": "kg/m^2"
+                      }
+                    ],
+                    "name": "kg/m^2",
+                    "description": "Kilogram per square meter"
+                  }
+                },
+                {
+                  "id": "pr4",
+                  "Name": {
+                    "value": "Layer thickness"
+                  },
+                  "Units": {
+                    "Unit": [
+                      {
+                        "Name": "m"
+                      }
+                    ],
+                    "name": "m",
+                    "description": "Length"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "quantitativeReference": {
+      "referenceToReferenceFlowProperty": 0
+    }
+  },
+  "modellingAndValidation": {
+    "LCIMethod": {
+      "typeOfDataSet": "Product flow",
+      "other": {
+        "anies": [
+          {
+            "name": "vendorSpecificProduct",
+            "value": true
+          }
+        ]
+      }
+    }
+  },
+  "administrativeInformation": {
+    "dataEntryBy": {
+      "timeStamp": 1638178233115
+    },
+    "publicationAndOwnership": {
+      "dataSetVersion": "00.01.000"
+    }
+  },
+  "flowProperties": {
+    "flowProperty": [
+      {
+        "referenceToFlowPropertyDataSet": {
+          "shortDescription": [
+            {
+              "value": "Fläche",
+              "lang": "de"
+            }
+          ],
+          "type": "flow property data set",
+          "refObjectId": "93a60a56-a3c8-19da-a746-0800200c9a66",
+          "uri": "../flowproperties/93a60a56-a3c8-19da-a746-0800200c9a66.xml"
+        },
+        "meanValue": 1.0,
+        "dataSetInternalID": 0
+      }
+    ]
+  },
+  "version": "1.1",
+  "locations": "../ILCDLocations.xml"
+}

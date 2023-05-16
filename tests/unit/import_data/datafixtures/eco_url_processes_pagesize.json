@@ -1,0 +1,49 @@
+{
+  "startIndex": 0,
+  "pageSize": 1,
+  "totalCount": 4657,
+  "data": [
+    {
+      "languages": [
+        "en"
+      ],
+      "name": " ABT Skanska Grön AsfaltBio Zero. Gällivare, Luleå, Umeå, Sundsvall, Borlänge och Södertälje asfaltverk.",
+      "uuid": "58871b96-bcdf-4438-b82f-d100c1df1fe5",
+      "version": "00.03.000",
+      "geo": "SE",
+      "classific": "Bygg / Asfalt og pukk",
+      "classificId": "67dd3145-6d07-4939-8373-297d512803ca",
+      "classificSystem": "EPDNorge",
+      "type": "EPD",
+      "refYear": 2021,
+      "validUntil": 2026,
+      "compliance": [
+        {
+          "name": "EN 15804",
+          "uuid": "b00f9ec0-7874-11e3-981f-0800200c9a66"
+        },
+        {
+          "name": "ISO 14025",
+          "uuid": "4f2eb655-6e44-4874-a95a-e28f5442cd4d"
+        },
+        {
+          "name": "ISO 21930",
+          "uuid": "9c1e8451-2321-4498-b459-b6568b6b6547"
+        }
+      ],
+      "subType": "specific dataset",
+      "dataSources": [
+        {
+          "uuid": "b497a91f-e14b-4b69-8f28-f50eb1576766"
+        }
+      ],
+      "regNo": "NEPD-2820-1517",
+      "regAuthority": {
+        "uuid": "7008caa3-6fea-4ad2-81eb-f2b7a0610e6c"
+      },
+      "nodeid": "EPD-NORWAY_DIGI",
+      "uri": "https://epdireland.lca-data.com/resource/processes/f256594a-a7bf-4bbb-91d0-65be256377c0?version=00.03.000",
+      "dsType": "Process"
+    }
+  ]
+}
