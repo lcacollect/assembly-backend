@@ -78,12 +78,6 @@ spec:
                   key: SERVER_NAME
                   name: {{ .Values.backend.configmap }}
 
-            - name: BACKEND_CORS_ORIGINS
-              valueFrom:
-                configMapKeyRef:
-                  key: BACKEND_CORS_ORIGINS
-                  name: {{ .Values.backend.configmap }}
-
             - name: SERVER_NAME
               valueFrom:
                 configMapKeyRef:
@@ -116,9 +110,6 @@ spec:
 
             - name: RUN_STAGE
               value: {{ .Values.deployType }}
-
-            - name: ECOPLATFORM_TOKEN
-              value: {{ .Values.backend.ecoplatformToken }}
 
             - name: ROUTER_URL
               value: {{ .Values.backend.routerUrl }}

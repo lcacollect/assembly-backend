@@ -1,7 +1,11 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from lcaconfig.formatting import string_uuid
+from lcacollect_config.formatting import string_uuid
 from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from models.assembly import Assembly
+    from models.epd import ProjectEPD
 
 
 class AssemblyEPDLink(SQLModel, table=True):

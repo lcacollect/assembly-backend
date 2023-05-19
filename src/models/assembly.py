@@ -1,10 +1,13 @@
 from enum import Enum
-from typing import List, Optional
+from typing import Optional, TYPE_CHECKING
 
-from lcaconfig.formatting import string_uuid
+from lcacollect_config.formatting import string_uuid
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSON
 from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from models.links import AssemblyEPDLink
 
 
 class AssemblyUnit(str, Enum):
@@ -18,14 +21,19 @@ class AssemblyUnit(str, Enum):
 class Assembly(SQLModel, table=True):
     """Assembly database class"""
 
-    id: Optional[str] = Field(default_factory=string_uuid, primary_key=True)
+    id: Optional[str] = Field(
+        default_factory=string_uuid,
+        primary_key=True,
+        nullable=False,
+        sa_column_kwargs={"unique": True},
+    )
     name: str = Field(index=True)
     category: str
-    life_time: float = 50
+    life_time: float = 50.0
     meta_fields: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
     unit: str = "M2"
     conversion_factor: float = 1.0
     project_id: str | None
     description: str | None
 
-    layers: List["AssemblyEPDLink"] = Relationship(back_populates="assembly")
+    layers: list["AssemblyEPDLink"] = Relationship(back_populates="assembly")

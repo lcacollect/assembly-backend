@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List, Optional
 
-from lcaconfig.formatting import string_uuid
+from lcacollect_config.formatting import string_uuid
 from sqlalchemy import Column, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON
 from sqlmodel import Field, Relationship, SQLModel
@@ -64,10 +64,9 @@ class ProjectEPD(EPDBase, table=True):
     # Relationships
     origin_id: str = Field(foreign_key="epd.id")
     origin: EPD = Relationship(back_populates="project_epds")
-    assembly_links: List[AssemblyEPDLink] = Relationship(back_populates="epd")
+    assembly_links: list[AssemblyEPDLink] = Relationship(back_populates="epd")
 
     @classmethod
     def create_from_epd(cls, epd: EPD, project_id: str):
-        org_data = epd.dict()
-        del org_data["id"]
-        return cls(**org_data, project_id=project_id, origin=epd)
+        org_data = epd.dict(exclude={"id", "origin_id"})
+        return cls(**org_data, project_id=project_id, origin=epd, origin_id=epd.id)

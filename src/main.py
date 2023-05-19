@@ -1,9 +1,8 @@
 import logging.config
-import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from lcaconfig.security import azure_scheme
+from lcacollect_config.security import azure_scheme
 
 from core.config import settings
 from routes import graphql_app
@@ -45,8 +44,3 @@ async def app_init():
     # Setup Azure AD
     await azure_scheme.openid_config.load_config()
 
-    if os.environ.get("RUN_STAGE") == "DEV":
-        logger.info(f"Running as DEV. Importing okobau epds!")
-        from import_data import okobau
-
-        await okobau.import_data()

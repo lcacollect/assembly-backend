@@ -50,6 +50,7 @@ input FilterOptions {
   isEmpty: Boolean = null
   isNotEmpty: Boolean = null
   isAnyOf: [String!] = null
+  jsonContains: String = null
 }
 
 type GraphQLAssembly {

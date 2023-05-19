@@ -1,7 +1,7 @@
 from typing import Optional
 
 import strawberry
-from lcaconfig.exceptions import DatabaseItemNotFound
+from lcacollect_config.exceptions import DatabaseItemNotFound
 from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
 from strawberry import UNSET
@@ -155,7 +155,9 @@ async def add_layer_to_assembly(layer: AssemblyLayerInput, assembly, session) ->
 
     link = models_links.AssemblyEPDLink(
         assembly=assembly,
+        assembly_id=assembly.id,
         epd=epd,
+        epd_id=epd.id,
         conversion_factor=layer.conversion_factor,
         name=layer.name,
     )

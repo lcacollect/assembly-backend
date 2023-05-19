@@ -1,6 +1,6 @@
 import strawberry
-from lcaconfig.graphql.pagination import Connection
-from lcaconfig.permissions import IsAuthenticated
+from lcacollect_config.graphql.pagination import Connection
+from lcacollect_config.permissions import IsAuthenticated
 
 import schema.assembly as schema_assembly
 import schema.assembly_layer as schema_assembly_layer

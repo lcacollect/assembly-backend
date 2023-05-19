@@ -1,15 +1,15 @@
 from datetime import date
 
 import pytest
-from lcaconfig.connection import create_postgres_engine
+from lcacollect_config.connection import create_postgres_engine
 from mixer.backend.sqlalchemy import Mixer
 from sqlalchemy.orm import selectinload, sessionmaker
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from models.links import AssemblyEPDLink
 from models.assembly import Assembly
 from models.epd import EPD, ProjectEPD
-from models.links import AssemblyEPDLink
 from schema.assembly_layer import AssemblyLayerInput, add_layer_to_assembly
 
 
@@ -82,13 +82,11 @@ async def assembly_with_layers(db, assemblies, project_epds) -> Assembly:
                 session,
             )
 
-        await session.commit()
-        await session.refresh(assembly)
-        query = (
-            select(Assembly)
-            .where(Assembly.id == assembly.id)
-            .options(selectinload(Assembly.layers).options(selectinload(AssemblyEPDLink.epd)))
-        )
+            await session.commit()
+            await session.refresh(assembly)
+        query = select(Assembly).where(Assembly.id == assembly.id)
+        query = query.options(selectinload(Assembly.layers).options(selectinload(AssemblyEPDLink.epd)))
+
         assembly = (await session.exec(query)).first()
 
     yield assembly

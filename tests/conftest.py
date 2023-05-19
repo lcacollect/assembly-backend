@@ -2,13 +2,13 @@ import time
 from typing import Iterator
 
 import docker
-import lcaconfig.security
+import lcacollect_config.security
 import pytest
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import AsyncClient
-from lcaconfig.connection import create_postgres_engine
-from lcaconfig.formatting import string_uuid
+from lcacollect_config.connection import create_postgres_engine
+from lcacollect_config.formatting import string_uuid
 from sqlmodel import SQLModel
 
 from core.config import settings
@@ -67,7 +67,7 @@ def mock_azure_scheme(mocker):
         claims = {"oid": "someid"}
 
     mocker.patch.object(
-        lcaconfig.security,
+        lcacollect_config.security,
         "azure_scheme",
         AzureScheme,
     )

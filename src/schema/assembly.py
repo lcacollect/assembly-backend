@@ -1,7 +1,8 @@
 from typing import List, Optional
 
 import strawberry
-from lcaconfig.exceptions import DatabaseItemNotFound
+from lcacollect_config.exceptions import DatabaseItemNotFound
+from lcacollect_config.context import get_session
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from strawberry.scalars import JSON
@@ -40,28 +41,32 @@ class GraphQLAssembly:
 
 
 async def assemblies_query(info: Info, project_id: str) -> list[GraphQLAssembly]:
-    session = info.context.get("session")
+    session = get_session(info)
+
     query = (
         select(models_assembly.Assembly)
         .where(models_assembly.Assembly.project_id == project_id)
-        .options(selectinload(models_assembly.Assembly.layers).options(selectinload(models_links.AssemblyEPDLink.epd)))
     )
+    if category_field := [field for field in info.selected_fields if field.name == "assemblies"]:
+        if [field for field in category_field[0].selections if field.name in ["layers", "gwp"]]:
+            query = query.options(
+                selectinload(models_assembly.Assembly.layers).options(selectinload(models_links.AssemblyEPDLink.epd)))
+
     assemblies = await session.exec(query)
 
     return assemblies.all()
 
 
 async def add_assembly_mutation(
-    info: Info,
-    name: str,
-    category: str,
-    project_id: str,
-    description: str | None,
-    life_time: float | None = 50,
-    meta_fields: Optional[JSON] = None,
-    conversion_factor: float | None = 1,
+        info: Info,
+        name: str,
+        category: str,
+        project_id: str,
+        description: str | None,
+        life_time: float | None = 50,
+        meta_fields: Optional[JSON] = None,
+        conversion_factor: float | None = 1,
 ) -> GraphQLAssembly:
-
     if meta_fields is None:
         meta_fields = {}
 
@@ -84,24 +89,26 @@ async def add_assembly_mutation(
     query = (
         select(models_assembly.Assembly)
         .where(models_assembly.Assembly.id == assembly.id)
-        .options(selectinload(models_assembly.Assembly.layers))
     )
+    if [field for field in info.selected_fields if field.name == "layers"]:
+        query = query.options(
+            selectinload(models_assembly.Assembly.layers).options(selectinload(models_links.AssemblyEPDLink.epd)))
+
     await session.exec(query)
 
     return assembly
 
 
 async def update_assembly_mutation(
-    info: Info,
-    id: str,
-    name: str | None = None,
-    category: str | None = None,
-    description: str | None = None,
-    life_time: float | None = None,
-    meta_fields: Optional[JSON] = None,
-    conversion_factor: float | None = None,
+        info: Info,
+        id: str,
+        name: str | None = None,
+        category: str | None = None,
+        description: str | None = None,
+        life_time: float | None = None,
+        meta_fields: Optional[JSON] = None,
+        conversion_factor: float | None = None,
 ) -> GraphQLAssembly:
-
     session = info.context.get("session")
     assembly = await session.get(models_assembly.Assembly, id)
     if not assembly:

@@ -3,7 +3,7 @@ from datetime import date
 
 import pytest
 from asyncpg.exceptions import UniqueViolationError
-from lcaconfig.connection import create_postgres_engine
+from lcacollect_config.connection import create_postgres_engine
 from sqlalchemy.exc import IntegrityError
 from sqlmodel.ext.asyncio.session import AsyncSession
 

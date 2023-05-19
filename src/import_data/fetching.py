@@ -5,7 +5,7 @@ from datetime import date
 
 import httpx
 from httpx import HTTPStatusError
-from lcaconfig.connection import create_postgres_engine
+from lcacollect_config.connection import create_postgres_engine
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 

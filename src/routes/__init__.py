@@ -1,6 +1,6 @@
 import os
 
-from lcaconfig.fastapi import get_context
+from lcacollect_config.fastapi import get_context
 from strawberry.fastapi import GraphQLRouter
 
 from schema import schema
