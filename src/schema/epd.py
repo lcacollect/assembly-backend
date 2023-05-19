@@ -5,8 +5,7 @@ from typing import Optional
 
 import strawberry
 from lcacollect_config.exceptions import DatabaseItemNotFound
-from lcacollect_config.graphql.input_filters import (filter_model_query,
-                                             sort_model_query)
+from lcacollect_config.graphql.input_filters import filter_model_query, sort_model_query
 from lcacollect_config.graphql.pagination import Connection, Cursor, Edge, PageInfo
 from sqlalchemy import func
 from sqlmodel import select

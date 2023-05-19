@@ -8,7 +8,7 @@ from alembic import context
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlmodel import create_engine, SQLModel
+from sqlmodel import SQLModel, create_engine
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
@@ -26,7 +26,6 @@ if config.config_file_name is not None:
 from models.assembly import Assembly
 from models.epd import EPD, ProjectEPD
 from models.links import AssemblyEPDLink
-
 
 target_metadata = SQLModel.metadata
 

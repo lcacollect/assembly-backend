@@ -43,4 +43,3 @@ async def app_init():
     logger.info("Setting up Azure AD")
     # Setup Azure AD
     await azure_scheme.openid_config.load_config()
-

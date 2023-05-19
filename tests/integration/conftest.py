@@ -7,9 +7,9 @@ from sqlalchemy.orm import selectinload, sessionmaker
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from models.links import AssemblyEPDLink
 from models.assembly import Assembly
 from models.epd import EPD, ProjectEPD
+from models.links import AssemblyEPDLink
 from schema.assembly_layer import AssemblyLayerInput, add_layer_to_assembly
 
 
