@@ -91,17 +91,17 @@ kubectl -n assembly exec -it $(kubectl -n assembly get pod -l app=backend -o nam
 
 # Folder Structure
 
-```python
-alembic /  # Contains migrations
-graphql /  # Contains graphql schema for the gateway
-helm /  # helm chart for deployment
-src /  # source code
-    core /  # code related to FastAPI/webserver
-    exceptions /  # custom exceptions
-    models /  # database models
-    routes /  # api routes
-    schema /  # graphql schema definitions
-tests /  # test code
+```plaintext
+alembic/  # Contains migrations
+graphql/  # Contains graphql schema for the gateway
+helm/  # helm chart for deployment
+src/  # source code
+    core/  # code related to FastAPI/webserver
+    exceptions/  # custom exceptions
+    models/  # database models
+    routes/  # api routes
+    schema/  # graphql schema definitions
+tests/  # test code
 ```
 
 # Documentation
@@ -111,3 +111,11 @@ tests /  # test code
 * [SQLModel](https://sqlmodel.tiangolo.com/)
 * [Alembic](https://alembic.sqlalchemy.org/en/latest/)
 * [Pytest](https://docs.pytest.org/en/7.1.x/)
+
+
+# License
+
+Unless otherwise described, the code in this repository is licensed under the Apache-2.0 License. Please note that some
+modules, extensions or code herein might be otherwise licensed. This is indicated either in the root of the containing
+folder under a different license file, or in the respective file's header. If you have any questions, don't hesitate to
+get in touch with us via [email](mailto:chrk@arkitema.com).
