@@ -1,6 +1,8 @@
-from initial_data.load_tabel7 import load
-import pytest
 from pathlib import Path
+
+import pytest
+
+from initial_data.load_tabel7 import load
 
 
 @pytest.mark.asyncio

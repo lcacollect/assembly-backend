@@ -49,7 +49,7 @@ async def epds(db) -> list[EPD]:
             penre=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
             pere=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
             meta_fields={},
-            conversions={}
+            conversions={},
         )
         [_session.refresh(epd) for epd in epds]
 

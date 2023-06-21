@@ -1,14 +1,13 @@
 import asyncio
-
-from datetime import date
-
-import io
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
-from pathlib import Path
 import csv
+import io
+from datetime import date
+from pathlib import Path
 
 from lcacollect_config.connection import create_postgres_engine
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from models.epd import EPD
 
 
@@ -36,11 +35,12 @@ async def load(path: Path):
                 reference_service_life=None,
                 location="DK",
                 conversions=[
-                    {"to": "KG",
-                    "value": float(row.get("Masse faktor"))*float(row.get("Deklareret faktor (FU)"))}
+                    {"to": "KG", "value": float(row.get("Masse faktor")) * float(row.get("Deklareret faktor (FU)"))}
                 ],
                 gwp={
-                    "a1a3": convert_gwp(row.get("Global Opvarmning, modul A1-A3"), float(row.get("Deklareret faktor (FU)"))),
+                    "a1a3": convert_gwp(
+                        row.get("Global Opvarmning, modul A1-A3"), float(row.get("Deklareret faktor (FU)"))
+                    ),
                     "a4": None,
                     "a5": None,
                     "b1": None,
@@ -67,6 +67,7 @@ async def load(path: Path):
             session.add(epd)
             await session.commit()
 
+
 def convert_unit(unit: str) -> str:
     if unit == "STK":
         return "pcs"
@@ -80,6 +81,7 @@ def convert_subtype(subtype: str) -> str:
         "Branche data": "Industry",
     }
     return map.get(subtype)
+
 
 def convert_gwp(gwp: str, declared_factor: float) -> float | None:
     if gwp == "-":

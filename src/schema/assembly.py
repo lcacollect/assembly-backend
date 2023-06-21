@@ -31,12 +31,7 @@ class GraphQLAssembly:
         """Calculate the gwp of the assembly based on the underlying layers."""
 
         if self.layers:
-            return sum(
-                [
-                    calculate_indicator(layer.epd.gwp, phases) * layer.conversion_factor
-                    for layer in self.layers
-                ]
-            )
+            return sum([calculate_indicator(layer.epd.gwp, phases) * layer.conversion_factor for layer in self.layers])
         return 0
 
 

@@ -1,8 +1,7 @@
-from enum import Enum
-
 import base64
 import logging
 from datetime import date
+from enum import Enum
 from typing import Optional, Union
 
 import strawberry
@@ -125,15 +124,15 @@ async def delete_project_epd_mutation(info: Info, id: str) -> str:
 
 @strawberry.enum
 class GraphQLUnit(Enum):
-    M = 'M'
-    M2 = 'M2'
-    M3 = 'M3'
-    kg = 'KG'
-    Tones = 'Tones'
-    PCS = 'PCS'
-    L = 'L'
-    M2R1 = 'M2R1'
-    UNKNOWN = 'UNKNOWN'
+    M = "M"
+    M2 = "M2"
+    M3 = "M3"
+    kg = "KG"
+    Tones = "Tones"
+    PCS = "PCS"
+    L = "L"
+    M2R1 = "M2R1"
+    UNKNOWN = "UNKNOWN"
 
 
 @strawberry.type
@@ -141,11 +140,12 @@ class GraphQLConversion:
     to: GraphQLUnit
     value: float
 
+
 @strawberry.type
 class GraphQLImpactCategories:
     a1a3: float | None
     a4: float | None
-    a5: float |  None
+    a5: float | None
     b1: float | None
     b2: float | None
     b3: float | None
@@ -158,6 +158,7 @@ class GraphQLImpactCategories:
     c3: float | None
     c4: float | None
     d: float | None
+
 
 @strawberry.enum
 class GraphQLImpactCategory(Enum):
@@ -177,6 +178,7 @@ class GraphQLImpactCategory(Enum):
     c4 = "c4"
     d = "d"
 
+
 @strawberry.type
 class GraphQLEPDBase:
     id: str
@@ -190,6 +192,7 @@ class GraphQLEPDBase:
     subtype: str
     reference_service_life: int | None
     comment: str | None
+
     @strawberry.field
     def conversions(self) -> list[GraphQLConversion]:
         if not self.conversions:
