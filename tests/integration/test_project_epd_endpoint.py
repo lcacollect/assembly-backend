@@ -14,9 +14,6 @@ async def test_get_project_epds(client: AsyncClient, project_epds, project_id):
             projectEpds(projectId: "{project_id}") {{
                 name
                 projectId
-                kgPerM3
-                kgPerM2
-                thickness
             }}
         }}
     """
@@ -31,9 +28,6 @@ async def test_get_project_epds(client: AsyncClient, project_epds, project_id):
         {
             "name": f"EPD {i}",
             "projectId": project_id,
-            "kgPerM3": None,
-            "kgPerM2": None,
-            "thickness": None,
         }
         for i in range(3)
     ]
@@ -45,7 +39,6 @@ async def test_filter_project_epds(client: AsyncClient, project_epds, project_id
         query {{
             projectEpds(projectId: "{project_id}", filters: {{name: {{contains: "0"}}}}) {{
                 name
-                category
                 projectId
             }}
         }}
@@ -82,30 +75,6 @@ async def test_create_project_epd(client: AsyncClient, epds, project_id):
         "name": "EPD 0",
         "originId": epds[0].id,
         "projectId": project_id,
-    }
-
-
-@pytest.mark.asyncio
-async def test_update_project_epd(client: AsyncClient, project_epds):
-    epd = project_epds[0]
-    mutation = f"""
-        mutation {{
-            updateProjectEpd(id: "{epd.id}", thickness: 23) {{
-                id
-                thickness
-            }}
-        }}
-    """
-
-    response = await client.post(f"{settings.API_STR}/graphql", json={"query": mutation, "variables": None})
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert not data.get("errors")
-    assert data["data"]["updateProjectEpd"] == {
-        "thickness": 23,
-        "id": epd.id,
     }
 
 

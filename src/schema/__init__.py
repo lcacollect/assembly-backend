@@ -27,10 +27,6 @@ class Mutation:
         permission_classes=[IsAuthenticated],
         resolver=schema_epd.add_project_epd_mutation,
     )
-    update_project_epd: schema_epd.GraphQLProjectEPD = strawberry.mutation(
-        permission_classes=[IsAuthenticated],
-        resolver=schema_epd.update_project_epd_mutation,
-    )
     delete_project_epd: str = strawberry.mutation(
         permission_classes=[IsAuthenticated],
         resolver=schema_epd.delete_project_epd_mutation,
@@ -67,7 +63,5 @@ class Mutation:
 schema = strawberry.Schema(
     query=Query,
     mutation=Mutation,
-    extensions=[
-        # AddValidationRules([NoSchemaIntrospectionCustomRule]),
-    ],
+    types=[schema_epd.GraphQLEPDBase],
 )
