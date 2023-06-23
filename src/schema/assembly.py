@@ -31,12 +31,7 @@ class GraphQLAssembly:
         """Calculate the gwp of the assembly based on the underlying layers."""
 
         if self.layers:
-            return sum(
-                [
-                    calculate_indicator(layer.epd.gwp_by_phases, phases) * layer.conversion_factor
-                    for layer in self.layers
-                ]
-            )
+            return sum([calculate_indicator(layer.epd.gwp, phases) * layer.conversion_factor for layer in self.layers])
         return 0
 
 
@@ -150,4 +145,4 @@ def calculate_indicator(data_by_phases: dict, phases: list[str] | None) -> float
     if phases:
         return sum([data_by_phases.get(phase, 0) for phase in phases])
     else:
-        return data_by_phases.get("A1-A3", 0)
+        return data_by_phases.get("a1a3", 0)

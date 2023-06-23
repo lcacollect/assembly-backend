@@ -1,8 +1,7 @@
 import pytest
 from lcacollect_config.connection import create_postgres_engine
-from mixer.backend.sqlalchemy import Mixer
 from pytest_alembic.config import Config
-from sqlalchemy.orm import sessionmaker
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from models.assembly import Assembly
@@ -28,22 +27,10 @@ async def assemblies(db, project_id):
 
 
 @pytest.fixture
-async def epds(db) -> list[EPD]:
-    session = sessionmaker(bind=create_postgres_engine(as_async=False))
-    with session() as _session:
-        mixer = Mixer(session=_session, commit=True)
-        epds = mixer.cycle(3).blend(
-            EPD,
-            gwp_by_phases={"A1": 10},
-            odp_by_phases={"A1": 10},
-            ap_by_phases={"A1": 10},
-            ep_by_phases={"A1": 10},
-            pocp_by_phases={"A1": 10},
-            penre_by_phases={"A1": 10},
-            pere_by_phases={"A1": 10},
-            meta_fields={},
-        )
-        [_session.refresh(epd) for epd in epds]
+async def epds(db, app) -> list[EPD]:
+    async with AsyncSession(db) as session:
+        query = select(EPD).limit(3)
+        epds = (await session.exec(query)).all()
 
     yield epds
 

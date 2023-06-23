@@ -75,32 +75,54 @@ type GraphQLAssemblyLayer @keys(fields: "project_id") {
   epdName: String!
 }
 
+type GraphQLConversion {
+  to: GraphQLUnit!
+  value: Float!
+}
+
 type GraphQLEPD {
   id: String!
   name: String!
-  category: String!
-  gwpByPhases: JSON!
-  odpByPhases: JSON!
-  apByPhases: JSON!
-  epByPhases: JSON!
-  pocpByPhases: JSON!
-  penreByPhases: JSON!
-  pereByPhases: JSON!
   version: String!
-  unit: String
-  expirationDate: Date!
-  dateUpdated: Date!
+  declaredUnit: String
+  validUntil: Date!
+  publishedDate: Date!
   source: String!
-  sourceData: String!
-  owner: String!
-  region: String!
-  type: String!
-  gwp(phases: [String!] = null): Float!
-  odp(phases: [String!] = null): Float!
-  ap(phases: [String!] = null): Float!
-  ep(phases: [String!] = null): Float!
-  pocp(phases: [String!] = null): Float!
+  location: String!
+  subtype: String!
+  referenceServiceLife: Int
+  comment: String
+  conversions: [GraphQLConversion!]!
+  gwp: GraphQLImpactCategories
+  odp: GraphQLImpactCategories
+  ap: GraphQLImpactCategories
+  ep: GraphQLImpactCategories
+  pocp: GraphQLImpactCategories
+  penre: GraphQLImpactCategories
+  pere: GraphQLImpactCategories
   originId: String
+}
+
+type GraphQLEPDBase {
+  id: String!
+  name: String!
+  version: String!
+  declaredUnit: String
+  validUntil: Date!
+  publishedDate: Date!
+  source: String!
+  location: String!
+  subtype: String!
+  referenceServiceLife: Int
+  comment: String
+  conversions: [GraphQLConversion!]!
+  gwp: GraphQLImpactCategories
+  odp: GraphQLImpactCategories
+  ap: GraphQLImpactCategories
+  ep: GraphQLImpactCategories
+  pocp: GraphQLImpactCategories
+  penre: GraphQLImpactCategories
+  pere: GraphQLImpactCategories
 }
 
 type GraphQLEPDConnection {
@@ -114,37 +136,59 @@ type GraphQLEPDEdge {
   cursor: String!
 }
 
+type GraphQLImpactCategories {
+  a1a3: Float
+  a4: Float
+  a5: Float
+  b1: Float
+  b2: Float
+  b3: Float
+  b4: Float
+  b5: Float
+  b6: Float
+  b7: Float
+  c1: Float
+  c2: Float
+  c3: Float
+  c4: Float
+  d: Float
+}
+
 type GraphQLProjectEPD @keys(fields: "project_id") {
   id: String!
   name: String!
-  category: String!
-  gwpByPhases: JSON!
-  odpByPhases: JSON!
-  apByPhases: JSON!
-  epByPhases: JSON!
-  pocpByPhases: JSON!
-  penreByPhases: JSON!
-  pereByPhases: JSON!
   version: String!
-  unit: String
-  expirationDate: Date!
-  dateUpdated: Date!
+  declaredUnit: String
+  validUntil: Date!
+  publishedDate: Date!
   source: String!
-  sourceData: String!
-  owner: String!
-  region: String!
-  type: String!
-  gwp(phases: [String!] = null): Float!
-  odp(phases: [String!] = null): Float!
-  ap(phases: [String!] = null): Float!
-  ep(phases: [String!] = null): Float!
-  pocp(phases: [String!] = null): Float!
+  location: String!
+  subtype: String!
+  referenceServiceLife: Int
+  comment: String
+  conversions: [GraphQLConversion!]!
+  gwp: GraphQLImpactCategories
+  odp: GraphQLImpactCategories
+  ap: GraphQLImpactCategories
+  ep: GraphQLImpactCategories
+  pocp: GraphQLImpactCategories
+  penre: GraphQLImpactCategories
+  pere: GraphQLImpactCategories
   originId: String!
-  kgPerM3: Float
-  kgPerM2: Float
-  thickness: Float
   assemblies: [GraphQLAssembly!]
   projectId: ID! @external
+}
+
+enum GraphQLUnit {
+  M
+  M2
+  M3
+  kg
+  Tones
+  PCS
+  L
+  M2R1
+  UNKNOWN
 }
 
 """
@@ -154,7 +198,6 @@ scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/fi
 
 type Mutation {
   addProjectEpd(projectId: String!, originId: String!): GraphQLProjectEPD!
-  updateProjectEpd(id: String!, kgPerM3: Float = null, kgPerM2: Float = null, thickness: Float = null): GraphQLProjectEPD!
   deleteProjectEpd(id: String!): String!
   addAssembly(name: String!, category: String!, projectId: String!, description: String, lifeTime: Float = 50, metaFields: JSON = null, conversionFactor: Float = 1): GraphQLAssembly!
   deleteAssembly(id: String!): String!

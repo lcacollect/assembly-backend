@@ -40,17 +40,16 @@ async def epds(db) -> list[EPD]:
         epds = mixer.cycle(3).blend(
             EPD,
             name=mixer.sequence(lambda n: f"EPD {n}"),
-            category="My Category",
             source="Ökobau",
-            source_data="daljhfladjf",
-            gwp_by_phases=mixer.sequence(lambda n: {"A1-A3": n * 10, "C": n * 10 + 2}),
-            odp_by_phases=mixer.sequence(lambda n: {"A1-A3": n * 10, "C": n * 10 + 2}),
-            ap_by_phases=mixer.sequence(lambda n: {"A1-A3": n * 10, "C": n * 10 + 2}),
-            ep_by_phases=mixer.sequence(lambda n: {"A1-A3": n * 10, "C": n * 10 + 2}),
-            pocp_by_phases=mixer.sequence(lambda n: {"A1-A3": n * 10, "C": n * 10 + 2}),
-            penre_by_phases=mixer.sequence(lambda n: {"A1-A3": n * 10, "C": n * 10 + 2}),
-            pere_by_phases=mixer.sequence(lambda n: {"A1-A3": n * 10, "C": n * 10 + 2}),
+            gwp=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
+            odp=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
+            ap=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
+            ep=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
+            pocp=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
+            penre=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
+            pere=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
             meta_fields={},
+            conversions={},
         )
         [_session.refresh(epd) for epd in epds]
 

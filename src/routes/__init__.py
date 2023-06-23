@@ -1,13 +1,13 @@
 import os
 
 from lcacollect_config.fastapi import get_context
-from strawberry.fastapi import GraphQLRouter
+from lcacollect_config.router import LCAGraphQLRouter
 
 from schema import schema
 
-graphql_app = GraphQLRouter(
+graphql_app = LCAGraphQLRouter(
     schema,
     context_getter=get_context,
     path="/graphql",
-    graphiql=os.getenv("SERVER_NAME") == "LCA Test",
+    graphiql=os.getenv("SERVER_NAME") in ["LCA Dev", "LCA Test"],
 )

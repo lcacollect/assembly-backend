@@ -1,7 +1,8 @@
 import base64
 import logging
 from datetime import date
-from typing import Optional
+from enum import Enum
+from typing import Optional, Union
 
 import strawberry
 from lcacollect_config.exceptions import DatabaseItemNotFound
@@ -10,7 +11,6 @@ from lcacollect_config.graphql.pagination import Connection, Cursor, Edge, PageI
 from sqlalchemy import func
 from sqlmodel import select
 from strawberry import UNSET
-from strawberry.scalars import JSON
 from strawberry.types import Info
 
 import models.epd as models_epd
@@ -111,30 +111,6 @@ async def add_project_epd_mutation(info: Info, project_id: str, origin_id: str) 
     return project_epd
 
 
-async def update_project_epd_mutation(
-    info: Info,
-    id: str,
-    kg_per_m3: float | None = None,
-    kg_per_m2: float | None = None,
-    thickness: float | None = None,
-) -> "GraphQLProjectEPD":
-    session = info.context.get("session")
-    project_epd = await session.get(models_epd.ProjectEPD, id)
-    if not project_epd:
-        raise DatabaseItemNotFound(f"Could not find Project EPD with id: {id}")
-
-    kwargs = {"kg_per_m3": kg_per_m3, "kg_per_m2": kg_per_m2, "thickness": thickness}
-    for key, value in kwargs.items():
-        if value:
-            setattr(project_epd, key, value)
-
-    session.add(project_epd)
-
-    await session.commit()
-    await session.refresh(project_epd)
-    return project_epd
-
-
 async def delete_project_epd_mutation(info: Info, id: str) -> str:
     """Delete a project EPD"""
 
@@ -146,53 +122,124 @@ async def delete_project_epd_mutation(info: Info, id: str) -> str:
     return id
 
 
+@strawberry.enum
+class GraphQLUnit(Enum):
+    M = "M"
+    M2 = "M2"
+    M3 = "M3"
+    kg = "KG"
+    Tones = "Tones"
+    PCS = "PCS"
+    L = "L"
+    M2R1 = "M2R1"
+    UNKNOWN = "UNKNOWN"
+
+
+@strawberry.type
+class GraphQLConversion:
+    to: GraphQLUnit
+    value: float
+
+
+@strawberry.type
+class GraphQLImpactCategories:
+    a1a3: float | None
+    a4: float | None
+    a5: float | None
+    b1: float | None
+    b2: float | None
+    b3: float | None
+    b4: float | None
+    b5: float | None
+    b6: float | None
+    b7: float | None
+    c1: float | None
+    c2: float | None
+    c3: float | None
+    c4: float | None
+    d: float | None
+
+
+@strawberry.enum
+class GraphQLImpactCategory(Enum):
+    a1a3 = "a1a3"
+    a4 = "a4"
+    a5 = "a5"
+    b1 = "b1"
+    b2 = "b2"
+    b3 = "b3"
+    b4 = "b4"
+    b5 = "b5"
+    b6 = "b6"
+    b7 = "b7"
+    c1 = "c1"
+    c2 = "c2"
+    c3 = "c3"
+    c4 = "c4"
+    d = "d"
+
+
 @strawberry.type
 class GraphQLEPDBase:
     id: str
     name: str
-    category: str
-    gwp_by_phases: JSON
-    odp_by_phases: JSON
-    ap_by_phases: JSON
-    ep_by_phases: JSON
-    pocp_by_phases: JSON
-    penre_by_phases: JSON
-    pere_by_phases: JSON
     version: str
-    unit: str | None
-    expiration_date: date
-    date_updated: date
+    declared_unit: str | None
+    valid_until: date
+    published_date: date
     source: str
-    source_data: str
-    owner: str
-    region: str
-    type: str
+    location: str
+    subtype: str
+    reference_service_life: int | None
+    comment: str | None
 
     @strawberry.field
-    def gwp(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.gwp_by_phases, phases)
+    def conversions(self) -> list[GraphQLConversion]:
+        if not self.conversions:
+            return []
+        return [GraphQLConversion(**conversion) for conversion in self.conversions]
 
     @strawberry.field
-    def odp(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.odp_by_phases, phases)
+    def gwp(self) -> GraphQLImpactCategories | None:
+        if not self.gwp:
+            return None
+        return GraphQLImpactCategories(**self.gwp)
 
     @strawberry.field
-    def ap(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.ap_by_phases, phases)
+    def odp(self) -> GraphQLImpactCategories | None:
+        if not self.odp:
+            return None
+        return GraphQLImpactCategories(**self.odp)
 
     @strawberry.field
-    def ep(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.ep_by_phases, phases)
+    def ap(self) -> GraphQLImpactCategories | None:
+        if not self.ap:
+            return None
+        return GraphQLImpactCategories(**self.ap)
 
     @strawberry.field
-    def pocp(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.pocp_by_phases, phases)
+    def ep(self) -> GraphQLImpactCategories | None:
+        if not self.ep:
+            return None
+        return GraphQLImpactCategories(**self.ep)
 
-    def penre(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.penre_by_phases, phases)
+    @strawberry.field
+    def pocp(self) -> GraphQLImpactCategories | None:
+        if not self.pocp:
+            return None
+        return GraphQLImpactCategories(**self.pocp)
 
-    def pere(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.pere_by_phases, phases)
+    @strawberry.field
+    def penre(self) -> GraphQLImpactCategories | None:
+        if not self.penre:
+            return None
+        return GraphQLImpactCategories(**self.penre)
+
+    @strawberry.field
+    def pere(self) -> GraphQLImpactCategories | None:
+        if not self.pere:
+            return None
+        return GraphQLImpactCategories(**self.pere)
 
 
 @strawberry.type
@@ -203,9 +250,6 @@ class GraphQLEPD(GraphQLEPDBase):
 @strawberry.federation.type(directives=[Keys(fields="project_id")])
 class GraphQLProjectEPD(GraphQLEPDBase):
     origin_id: str
-    kg_per_m3: float | None
-    kg_per_m2: float | None
-    thickness: float | None
 
     assemblies: list["schema_assembly.GraphQLAssembly"] | None
     project_id: strawberry.ID = strawberry.federation.field(external=True)
