@@ -5,6 +5,8 @@ from enum import Enum
 from typing import Optional, Union
 
 import strawberry
+
+from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query, sort_model_query
 from lcacollect_config.graphql.pagination import Connection, Cursor, Edge, PageInfo
@@ -22,16 +24,15 @@ logger = logging.getLogger(__name__)
 
 
 async def epds_query(
-    info: Info,
-    filters: Optional[EPDFilters] = None,
-    sort_by: Optional[EPDSort] = None,
-    count: int = 50,
-    after: Optional[Cursor] = UNSET,
+        info: Info,
+        filters: Optional[EPDFilters] = None,
+        sort_by: Optional[EPDSort] = None,
+        count: int = 50,
+        after: Optional[Cursor] = UNSET,
 ) -> Connection["GraphQLEPD"]:
     """
     Query the database for EPD entries.
     This query is paginated.
-    The pagination inspiration source is from Strawberry's docs: https://strawberry.rocks/docs/guides/pagination
     """
 
     session = info.context.get("session")
@@ -83,10 +84,14 @@ def build_epd_cursor(epd: models_epd.EPD):
 
 
 async def project_epds_query(
-    info: Info, project_id: str, filters: Optional[ProjectEPDFilters] = None
+        info: Info, project_id: str, filters: Optional[ProjectEPDFilters] = None
 ) -> list["GraphQLProjectEPD"]:
-    session = info.context.get("session")
+    """Query the database for EPD entries for a specific project."""
+
+    session = get_session(info)
+
     query = select(models_epd.ProjectEPD).where(models_epd.ProjectEPD.project_id == project_id)
+
     if not filters:
         epds = await session.exec(query)
         return epds.all()
@@ -96,19 +101,23 @@ async def project_epds_query(
         return epds.all()
 
 
-async def add_project_epd_mutation(info: Info, project_id: str, origin_id: str) -> "GraphQLProjectEPD":
-    session = info.context.get("session")
+async def add_project_epds_mutation(info: Info, project_id: str, epd_ids: list[str]) -> list["GraphQLProjectEPD"]:
+    """Add Global EPDs to a project."""
+    session = get_session(info)
 
-    epd = await session.get(models_epd.EPD, origin_id)
-    if not epd:
-        raise DatabaseItemNotFound(f"Could not find EPD with id: {origin_id}")
+    project_epds = []
+    for origin_id in epd_ids:
+        epd = await session.get(models_epd.EPD, origin_id)
+        if not epd:
+            raise DatabaseItemNotFound(f"Could not find EPD with id: {origin_id}")
 
-    project_epd = models_epd.ProjectEPD.create_from_epd(epd, project_id=project_id)
-    session.add(project_epd)
+        project_epd = models_epd.ProjectEPD.create_from_epd(epd, project_id=project_id)
+        project_epds.append(project_epd)
+        session.add(project_epd)
 
     await session.commit()
-    await session.refresh(project_epd)
-    return project_epd
+    [await session.refresh(project_epd) for project_epd in project_epds]
+    return project_epds
 
 
 async def delete_project_epd_mutation(info: Info, id: str) -> str:

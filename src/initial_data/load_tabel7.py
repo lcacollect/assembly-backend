@@ -16,9 +16,10 @@ async def load(path: Path):
 
     async with AsyncSession(create_postgres_engine()) as session:
         for row in reader:
+            row: dict
             if row.get("Sorterings ID").startswith("#S"):
                 continue
-
+            _test = (await session.exec(select(EPD))).first()
             _epd = (await session.exec(select(EPD).where(EPD.comment == row.get("Sorterings ID")))).first()
             if _epd:
                 continue
@@ -29,7 +30,7 @@ async def load(path: Path):
                 declared_unit=convert_unit(row.get("Deklareret enhed (FU)")),
                 valid_until=date(year=2025, month=12, day=22),
                 published_date=date(year=2020, month=12, day=22),
-                source=row.get("Url (link)"),
+                source="BR18 - Tabel 7",
                 subtype=convert_subtype(row.get("Data type")),
                 comment=row.get("Sorterings ID"),
                 reference_service_life=None,
@@ -62,7 +63,9 @@ async def load(path: Path):
                 pocp={},
                 penre={},
                 pere={},
-                meta_fields={},
+                meta_fields={
+                    "data_source": row.get("Url (link)")
+                },
             )
             session.add(epd)
             await session.commit()

@@ -1,6 +1,7 @@
 import strawberry
 from lcacollect_config.graphql.pagination import Connection
 from lcacollect_config.permissions import IsAuthenticated
+from inspect import getdoc
 
 import schema.assembly as schema_assembly
 import schema.assembly_layer as schema_assembly_layer
@@ -23,13 +24,15 @@ class Query:
 @strawberry.type
 class Mutation:
     # EPD
-    add_project_epd: schema_epd.GraphQLProjectEPD = strawberry.mutation(
+    add_project_epds: list[schema_epd.GraphQLProjectEPD] = strawberry.mutation(
         permission_classes=[IsAuthenticated],
-        resolver=schema_epd.add_project_epd_mutation,
+        resolver=schema_epd.add_project_epds_mutation,
+        description=getdoc(schema_epd.add_project_epds_mutation),
     )
     delete_project_epd: str = strawberry.mutation(
         permission_classes=[IsAuthenticated],
         resolver=schema_epd.delete_project_epd_mutation,
+        description=getdoc(schema_epd.delete_project_epd_mutation),
     )
 
     # Assembly
