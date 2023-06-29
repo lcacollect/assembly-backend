@@ -1,9 +1,10 @@
-import pytest
 from datetime import date
+
+import pytest
+from lcacollect_config.connection import create_postgres_engine
 from pytest_alembic.config import Config
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from lcacollect_config.connection import create_postgres_engine
 from models.assembly import Assembly
 from models.epd import EPD
 
