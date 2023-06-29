@@ -2,13 +2,13 @@ from typing import Annotated, Optional
 
 import httpx
 import strawberry
+from exceptions import MicroServiceConnectionError, MicroServiceResponseError
 from lcacollect_config.context import get_session, get_token
 from sqlmodel import select
 from strawberry.types import Info
 
 import models.assembly as models_assembly
 from core.config import settings
-from exceptions import MicroServiceConnectionError, MicroServiceResponseError
 from schema.assembly import GraphQLAssembly
 
 
