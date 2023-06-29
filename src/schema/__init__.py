@@ -1,7 +1,8 @@
+from inspect import getdoc
+
 import strawberry
 from lcacollect_config.graphql.pagination import Connection
 from lcacollect_config.permissions import IsAuthenticated
-from inspect import getdoc
 
 import schema.assembly as schema_assembly
 import schema.assembly_layer as schema_assembly_layer

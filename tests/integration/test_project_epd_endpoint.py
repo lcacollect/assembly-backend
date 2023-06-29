@@ -65,10 +65,10 @@ async def test_create_project_epd(client: AsyncClient, epds, project_id):
         }
     """
 
-    response = await client.post(f"{settings.API_STR}/graphql", json={"query": mutation, "variables": {
-        "projectId": project_id,
-        "epdIds": [epds[0].id]
-    }})
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={"query": mutation, "variables": {"projectId": project_id, "epdIds": [epds[0].id]}},
+    )
 
     assert response.status_code == 200
     data = response.json()

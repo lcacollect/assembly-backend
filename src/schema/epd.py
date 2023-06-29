@@ -5,7 +5,6 @@ from enum import Enum
 from typing import Optional, Union
 
 import strawberry
-
 from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query, sort_model_query
@@ -24,11 +23,11 @@ logger = logging.getLogger(__name__)
 
 
 async def epds_query(
-        info: Info,
-        filters: Optional[EPDFilters] = None,
-        sort_by: Optional[EPDSort] = None,
-        count: int = 50,
-        after: Optional[Cursor] = UNSET,
+    info: Info,
+    filters: Optional[EPDFilters] = None,
+    sort_by: Optional[EPDSort] = None,
+    count: int = 50,
+    after: Optional[Cursor] = UNSET,
 ) -> Connection["GraphQLEPD"]:
     """
     Query the database for EPD entries.
@@ -84,7 +83,7 @@ def build_epd_cursor(epd: models_epd.EPD):
 
 
 async def project_epds_query(
-        info: Info, project_id: str, filters: Optional[ProjectEPDFilters] = None
+    info: Info, project_id: str, filters: Optional[ProjectEPDFilters] = None
 ) -> list["GraphQLProjectEPD"]:
     """Query the database for EPD entries for a specific project."""
 

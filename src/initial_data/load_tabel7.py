@@ -63,9 +63,7 @@ async def load(path: Path):
                 pocp={},
                 penre={},
                 pere={},
-                meta_fields={
-                    "data_source": row.get("Url (link)")
-                },
+                meta_fields={"data_source": row.get("Url (link)")},
             )
             session.add(epd)
             await session.commit()
