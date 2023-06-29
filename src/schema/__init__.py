@@ -7,6 +7,7 @@ from lcacollect_config.permissions import IsAuthenticated
 import schema.assembly as schema_assembly
 import schema.assembly_layer as schema_assembly_layer
 import schema.epd as schema_epd
+from core import federation
 
 
 @strawberry.type
@@ -64,8 +65,9 @@ class Mutation:
     )
 
 
-schema = strawberry.Schema(
+schema = strawberry.federation.Schema(
     query=Query,
     mutation=Mutation,
-    types=[schema_epd.GraphQLEPDBase],
+    enable_federation_2=True,
+    types=[schema_epd.GraphQLEPDBase, federation.GraphQLSchemaElement],
 )
