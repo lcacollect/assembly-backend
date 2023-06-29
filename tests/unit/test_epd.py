@@ -35,8 +35,8 @@ def test_create_epd():
 
 
 @pytest.mark.asyncio
-async def test_create_project_epd_from_epd(epd):
-    async with AsyncSession(create_postgres_engine()) as session:
+async def test_create_project_epd_from_epd(db, epd):
+    async with AsyncSession(db) as session:
         project_epd = ProjectEPD.create_from_epd(epd, project_id="testid123")
         session.add(project_epd)
         await session.commit()

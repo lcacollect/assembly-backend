@@ -46,5 +46,6 @@ async def app_init():
     await azure_scheme.openid_config.load_config()
 
     # Load Table 7 EPDs
-    table7_csv = Path(__file__).parent / "initial_data" / "BR18_bilag_2_tabel_7_version_2_201222.csv"
-    await load_table_7_epds(table7_csv)
+    if settings.SERVER_NAME != "LCA Test":
+        table7_csv = Path(__file__).parent / "initial_data" / "BR18_bilag_2_tabel_7_version_2_201222.csv"
+        await load_table_7_epds(table7_csv)

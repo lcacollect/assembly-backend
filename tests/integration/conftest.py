@@ -34,24 +34,50 @@ async def assemblies(db, project_id) -> list[Assembly]:
 
 @pytest.fixture
 async def epds(db) -> list[EPD]:
-    session = sessionmaker(bind=create_postgres_engine(as_async=False))
-    with session() as _session:
-        mixer = Mixer(session=_session, commit=True)
-        epds = mixer.cycle(3).blend(
-            EPD,
-            name=mixer.sequence(lambda n: f"EPD {n}"),
-            source="Ökobau",
-            gwp=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
-            odp=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
-            ap=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
-            ep=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
-            pocp=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
-            penre=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
-            pere=mixer.sequence(lambda n: {"a1a3": n * 10, "c1": n * 10 + 2}),
-            meta_fields={},
-            conversions={},
-        )
-        [_session.refresh(epd) for epd in epds]
+    epds = []
+    async with AsyncSession(db) as session:
+        for i in range(3):
+            impact_category = {
+                "a1a3": i * 10,
+                "a4": 0,
+                "a5": 0,
+                "b1": 0,
+                "b2": 0,
+                "b3": 0,
+                "b4": 0,
+                "b5": 0,
+                "b6": 0,
+                "b7": 0,
+                "c1": i * 10 + 2,
+                "c2": 0,
+                "c3": 0,
+                "c4": 0,
+                "d": 0,
+            }
+            epd = EPD(
+                name=f"EPD {i}",
+                source="Ökobau",
+                gwp=impact_category,
+                odp=impact_category,
+                ap=impact_category,
+                ep=impact_category,
+                pocp=impact_category,
+                penre=impact_category,
+                pere=impact_category,
+                meta_fields={},
+                conversions={},
+                version="0.0.0",
+                valid_until=date(year=1, month=1, day=1),
+                published_date=date(year=1, month=1, day=2),
+                location="DK",
+                declared_unit="kg",
+                subtype="Generic",
+            )
+            session.add(epd)
+            epds.append(epd)
+
+        await session.commit()
+        [await session.refresh(epd) for epd in epds]
 
     yield epds
 
