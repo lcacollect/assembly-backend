@@ -33,6 +33,7 @@ class EPDSort(BaseFilter):
 
 @strawberry.input
 class ProjectEPDFilters(BaseFilter):
+    id: Optional[FilterOptions] = None
     name: Optional[FilterOptions] = None
     unit: Optional[SortOptions] = None
     category: Optional[FilterOptions] = None
