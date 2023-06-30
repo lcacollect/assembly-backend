@@ -229,6 +229,7 @@ type PageInfo {
 }
 
 input ProjectEPDFilters {
+  id: FilterOptions = null
   name: FilterOptions = null
   unit: SortOptions = null
   category: FilterOptions = null

@@ -5,7 +5,7 @@ from core.config import settings
 
 
 @pytest.mark.asyncio
-async def test_get_epds(client: AsyncClient):
+async def test_get_epds(client: AsyncClient, epds):
     query = """
         query {
             epds {
@@ -34,10 +34,10 @@ async def test_get_epds(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_filter_epds(client: AsyncClient):
+async def test_filter_epds(client: AsyncClient, epds):
     query = """
         query {
-            epds(filters: {name: {contains: "Gulvvarmesystem"}}) {
+            epds(filters: {name: {contains: "0"}}) {
                 edges {
                     node {
                         name
@@ -54,4 +54,4 @@ async def test_filter_epds(client: AsyncClient):
     data = response.json()
 
     assert not data.get("errors")
-    assert "Gulvvarmesystem" in data["data"]["epds"]["edges"][0]["node"]["name"]
+    assert "EPD 0" in data["data"]["epds"]["edges"][0]["node"]["name"]
