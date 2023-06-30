@@ -28,7 +28,7 @@ class GraphQLAssemblyLayer:
     name: str | None
     conversion_factor: float | None
 
-    project_id: strawberry.ID = strawberry.federation.field(external=True)
+    project_id: strawberry.ID = strawberry.federation.field(shareable=True)
 
 
 @strawberry.input

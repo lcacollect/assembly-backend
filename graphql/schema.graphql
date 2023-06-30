@@ -1,5 +1,10 @@
 directive @keys(fields: String!) on OBJECT
 
+schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable"]) {
+  query: Query
+  mutation: Mutation
+}
+
 input AssemblyLayerDeleteInput {
   id: String!
 }
@@ -70,7 +75,7 @@ type GraphQLAssemblyLayer @keys(fields: "project_id") {
   id: String
   name: String
   conversionFactor: Float
-  projectId: ID! @external
+  projectId: ID! @shareable
   epdId: String!
   epdName: String!
 }
@@ -176,7 +181,13 @@ type GraphQLProjectEPD @keys(fields: "project_id") {
   pere: GraphQLImpactCategories
   originId: String!
   assemblies: [GraphQLAssembly!]
-  projectId: ID! @external
+  projectId: ID! @shareable
+}
+
+type GraphQLSchemaElement @key(fields: "id") {
+  id: ID!
+  assemblyId: String @shareable
+  assembly: GraphQLAssembly
 }
 
 enum GraphQLUnit {
@@ -230,6 +241,8 @@ input ProjectEPDFilters {
 }
 
 type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
+  _service: _Service!
   assemblies(projectId: String!): [GraphQLAssembly!]!
   epds(filters: EPDFilters = null, sortBy: EPDSort = null, count: Int! = 50, after: String): GraphQLEPDConnection!
   projectEpds(projectId: String!, filters: ProjectEPDFilters = null): [GraphQLProjectEPD!]!
@@ -238,4 +251,12 @@ type Query {
 enum SortOptions {
   ASC
   DSC
+}
+
+scalar _Any
+
+union _Entity = GraphQLSchemaElement
+
+type _Service {
+  sdl: String!
 }

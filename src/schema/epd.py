@@ -260,4 +260,4 @@ class GraphQLProjectEPD(GraphQLEPDBase):
     origin_id: str
 
     assemblies: list["schema_assembly.GraphQLAssembly"] | None
-    project_id: strawberry.ID = strawberry.federation.field(external=True)
+    project_id: strawberry.ID = strawberry.federation.field(shareable=True)
