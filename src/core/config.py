@@ -1,3 +1,8 @@
-from lcacollect_config import config
+from lcacollect_config.config import AzureSettings, PostgresSettings, ServerSettings
 
-settings = config.Settings()
+
+class AssemblySettings(ServerSettings, AzureSettings, PostgresSettings):
+    pass
+
+
+settings = AssemblySettings()
