@@ -1,15 +1,16 @@
+from typing import Annotated, Optional
+
 import httpx
 import strawberry
+from lcacollect_config.context import get_session, get_token
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from strawberry.types import Info
-from typing import Annotated, Optional
 
 import models.assembly as models_assembly
 import models.links as models_links
 from core.config import settings
 from core.exceptions import MicroServiceConnectionError, MicroServiceResponseError
-from lcacollect_config.context import get_session, get_token
 from schema.assembly import GraphQLAssembly
 
 
