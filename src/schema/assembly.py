@@ -17,6 +17,7 @@ import schema.assembly_layer as schema_assembly_layer
 class GraphQLAssembly:
     id: str
     name: str
+    project_id: str
     category: str
     life_time: float
     meta_fields: JSON
