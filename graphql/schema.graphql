@@ -61,6 +61,7 @@ input FilterOptions {
 type GraphQLAssembly {
   id: String!
   name: String!
+  projectId: String!
   category: String!
   lifeTime: Float!
   metaFields: JSON!

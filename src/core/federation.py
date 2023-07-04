@@ -3,10 +3,12 @@ from typing import Annotated, Optional
 import httpx
 import strawberry
 from lcacollect_config.context import get_session, get_token
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from strawberry.types import Info
 
 import models.assembly as models_assembly
+import models.links as models_links
 from core.config import settings
 from core.exceptions import MicroServiceConnectionError, MicroServiceResponseError
 from schema.assembly import GraphQLAssembly
@@ -20,16 +22,22 @@ async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLAssem
         session = get_session(info)
 
         query = select(models_assembly.Assembly).where(models_assembly.Assembly.id == root.assembly_id)
-        element = session.exec(query).first()
+        query = query.options(
+            selectinload(models_assembly.Assembly.layers).options(selectinload(models_links.AssemblyEPDLink.epd))
+        )
+        element = (await session.exec(query)).first()
         if element:
             return GraphQLAssembly(
+                id=element.id,
                 name=element.name,
                 project_id=element.project_id,
+                unit=element.unit,
                 category=element.category,
                 life_time=element.life_time,
                 description=element.description,
                 conversion_factor=element.conversion_factor,
                 meta_fields=element.meta_fields,
+                layers=element.layers,
             )
     else:
         return None
