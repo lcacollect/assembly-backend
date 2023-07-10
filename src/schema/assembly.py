@@ -1,4 +1,5 @@
-from typing import List, Optional
+from enum import Enum
+from typing import Optional
 
 import strawberry
 from lcacollect_config.context import get_session
@@ -13,19 +14,28 @@ import models.links as models_links
 import schema.assembly_layer as schema_assembly_layer
 
 
+@strawberry.enum
+class AssemblyUnit(Enum):
+    m = "M"
+    m2 = "M2"
+    m3 = "M3"
+    kg = "KG"
+    pcs = "Pcs"
+
+
 @strawberry.type
 class GraphQLAssembly:
     id: str
     name: str
     project_id: str
-    category: str
+    category: str | None
     life_time: float
-    meta_fields: JSON
-    unit: str
+    meta_fields: JSON | None
+    unit: AssemblyUnit | None
     conversion_factor: float
-    description: str
+    description: str | None
 
-    layers: list[schema_assembly_layer.GraphQLAssemblyLayer]
+    layers: list[schema_assembly_layer.GraphQLAssemblyLayer] | None
 
     @strawberry.field
     def gwp(self, phases: list[str] | None = None) -> float:
@@ -57,6 +67,7 @@ async def add_assembly_mutation(
     category: str,
     project_id: str,
     description: str | None,
+    unit: AssemblyUnit = None,
     life_time: float | None = 50,
     meta_fields: Optional[JSON] = None,
     conversion_factor: float | None = 1,
@@ -74,6 +85,7 @@ async def add_assembly_mutation(
         description=description,
         conversion_factor=conversion_factor,
         meta_fields=meta_fields,
+        unit=unit.value if unit else None,
     )
 
     session.add(assembly)
@@ -100,6 +112,7 @@ async def update_assembly_mutation(
     life_time: float | None = None,
     meta_fields: Optional[JSON] = None,
     conversion_factor: float | None = None,
+    unit: AssemblyUnit | None = None,
 ) -> GraphQLAssembly:
     session = info.context.get("session")
     assembly = await session.get(models_assembly.Assembly, id)
@@ -113,6 +126,7 @@ async def update_assembly_mutation(
         "life_time": life_time,
         "meta_fields": meta_fields,
         "conversion_factor": conversion_factor,
+        "unit": unit.value if unit else None,
     }
     for key, value in kwargs.items():
         if value:

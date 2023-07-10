@@ -61,7 +61,7 @@ async def test_get_assemblies_with_layers(client: AsyncClient, assembly_with_lay
 async def test_create_assembly(client: AsyncClient):
     mutation = """
         mutation {
-            addAssembly(name: "My Assembly", category: "New Category", lifeTime: 45, projectId: "TESTID", description: "this is an assembly") {
+            addAssembly(name: "My Assembly", category: "New Category", lifeTime: 45, projectId: "TESTID", description: "this is an assembly", unit: m2) {
                 name
                 category
                 lifeTime
