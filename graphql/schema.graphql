@@ -14,6 +14,8 @@ input AssemblyLayerInput {
   id: String
   name: String
   conversionFactor: Float
+  referenceServiceLife: Int
+  description: String
 }
 
 input AssemblyLayerUpdateInput {
@@ -21,6 +23,16 @@ input AssemblyLayerUpdateInput {
   epdId: String
   name: String
   conversionFactor: Float
+  referenceServiceLife: Int
+  description: String
+}
+
+enum AssemblyUnit {
+  m
+  m2
+  m3
+  kg
+  pcs
 }
 
 """Date (isoformat)"""
@@ -62,21 +74,22 @@ type GraphQLAssembly {
   id: String!
   name: String!
   projectId: String!
-  category: String!
+  category: String
   lifeTime: Float!
-  metaFields: JSON!
-  unit: String!
+  metaFields: JSON
+  unit: AssemblyUnit
   conversionFactor: Float!
-  description: String!
-  layers: [GraphQLAssemblyLayer!]!
+  description: String
+  layers: [GraphQLAssemblyLayer!]
   gwp(phases: [String!] = null): Float!
 }
 
-type GraphQLAssemblyLayer @keys(fields: "project_id") {
+type GraphQLAssemblyLayer {
   id: String
   name: String
   conversionFactor: Float
-  projectId: ID! @shareable
+  referenceServiceLife: Int
+  description: String
   epdId: String!
   epdName: String!
 }
@@ -214,9 +227,9 @@ type Mutation {
 
   """Delete a project EPD"""
   deleteProjectEpd(id: String!): String!
-  addAssembly(name: String!, category: String!, projectId: String!, description: String, lifeTime: Float = 50, metaFields: JSON = null, conversionFactor: Float = 1): GraphQLAssembly!
+  addAssembly(name: String!, category: String!, projectId: String!, description: String, unit: AssemblyUnit!, lifeTime: Float = 50, metaFields: JSON = null, conversionFactor: Float = 1): GraphQLAssembly!
   deleteAssembly(id: String!): String!
-  updateAssembly(id: String!, name: String = null, category: String = null, description: String = null, lifeTime: Float = null, metaFields: JSON = null, conversionFactor: Float = null): GraphQLAssembly!
+  updateAssembly(id: String!, name: String = null, category: String = null, description: String = null, lifeTime: Float = null, metaFields: JSON = null, conversionFactor: Float = null, unit: AssemblyUnit = null): GraphQLAssembly!
   addAssemblyLayers(id: String!, layers: [AssemblyLayerInput!]!): [GraphQLAssemblyLayer!]!
   deleteAssemblyLayers(id: String!, layers: [AssemblyLayerDeleteInput!]!): [String!]!
   updateAssemblyLayers(id: String!, layers: [AssemblyLayerUpdateInput!]!): [GraphQLAssemblyLayer!]!

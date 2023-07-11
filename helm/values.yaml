@@ -44,4 +44,15 @@ backend:
   adTenantId: ""
   adOpenApiClientId: ""
   adAppClientId: ""
-
+  aadGraphSecret:
+    name: aad-graph-secret
+    value: "c2VjcmV0"
+  emailSecret:
+    name: sendgrid-secret
+    value: "c2VjcmV0"
+  emailNotificationFrom: no-reply@arkitema.com
+  internalEmailDomains: "arkitema,cowi,cowicloud"
+  defaultAdFQDN: cowi.onmicrosoft.com
+  adTenantId: ""
+  adOpenApiClientId: ""
+  adAppClientId: ""

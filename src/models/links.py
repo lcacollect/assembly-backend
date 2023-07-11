@@ -15,6 +15,8 @@ class AssemblyEPDLink(SQLModel, table=True):
     assembly_id: Optional[str] = Field(default=None, foreign_key="assembly.id", primary_key=True)
     epd_id: Optional[str] = Field(default=None, foreign_key="projectepd.id", primary_key=True)
     conversion_factor: float = 1.0
+    reference_service_life: Optional[int] = None
+    description: str = ""
     name: str = ""
     assembly: "Assembly" = Relationship(back_populates="layers")
     epd: "ProjectEPD" = Relationship(back_populates="assembly_links")

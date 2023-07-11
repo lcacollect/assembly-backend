@@ -1,9 +1,8 @@
-from lcacollect_config.config import AzureSettings, PostgresSettings, ServerSettings
-from pydantic import AnyHttpUrl
+from lcacollect_config.config import Settings
 
 
-class AssemblySettings(ServerSettings, AzureSettings, PostgresSettings):
-    ROUTER_URL: AnyHttpUrl
+class AssemblySettings(Settings):
+    pass
 
 
 settings = AssemblySettings()
