@@ -15,10 +15,14 @@ export POSTGRES_PORT=5433
 export AAD_OPENAPI_CLIENT_ID=PLACEHOLDER
 export AAD_APP_CLIENT_ID=PLACEHOLDER
 export AAD_TENANT_ID=PLACEHOLDER
-export AAD_APP_GRAPH_SECRET=PLACEHOLDER
 export ROUTER_URL=http://router.url
+export AAD_GRAPH_SECRET=PLACEHOLDER
+export SPECKLE_TOKEN=placeholder
+export EMAIL_NOTIFICATION_FROM=no-reply@arkitema.com
 export INTERNAL_EMAIL_DOMAINS_LIST=arkitema,cowi,cowicloud
+export DEFAULT_AD_FQDN=cowi.onmicrosoft.com
 export SENDGRID_SECRET=PLACEHOLDER
+
 
 # Export GraphQL schema
 BASEDIR=$(dirname $0)

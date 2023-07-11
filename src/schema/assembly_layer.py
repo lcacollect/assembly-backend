@@ -13,7 +13,7 @@ import models.links as models_links
 from schema.directives import Keys
 
 
-@strawberry.federation.type(directives=[Keys(fields="project_id")])
+@strawberry.type
 class GraphQLAssemblyLayer:
     id: str | None
 
@@ -27,8 +27,8 @@ class GraphQLAssemblyLayer:
 
     name: str | None
     conversion_factor: float | None
-
-    project_id: strawberry.ID = strawberry.federation.field(shareable=True)
+    reference_service_life: int | None
+    description: str | None
 
 
 @strawberry.input
@@ -37,6 +37,8 @@ class AssemblyLayerInput:
     id: Optional[str] = UNSET
     name: Optional[str] = UNSET
     conversion_factor: Optional[float] = UNSET
+    reference_service_life: Optional[int] = UNSET
+    description: Optional[str] = UNSET
 
 
 async def add_assembly_layers_mutation(
@@ -93,6 +95,8 @@ class AssemblyLayerUpdateInput:
     epd_id: Optional[str] = UNSET
     name: Optional[str] = UNSET
     conversion_factor: Optional[float] = UNSET
+    reference_service_life: Optional[int] = UNSET
+    description: Optional[str] = UNSET
 
 
 async def update_assembly_layers_mutation(
@@ -116,6 +120,8 @@ async def update_assembly_layers_mutation(
             "name": layer.name,
             "conversion_factor": layer.conversion_factor,
             "epd_id": layer.epd_id,
+            "reference_service_life": layer.reference_service_life,
+            "description": layer.description,
         }
         for key, value in kwargs.items():
             if value:
@@ -160,6 +166,8 @@ async def add_layer_to_assembly(layer: AssemblyLayerInput, assembly, session) ->
         epd_id=epd.id,
         conversion_factor=layer.conversion_factor,
         name=layer.name,
+        description=layer.description,
+        reference_service_life=layer.reference_service_life,
     )
     session.add(link)
 

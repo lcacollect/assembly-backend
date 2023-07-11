@@ -14,6 +14,8 @@ input AssemblyLayerInput {
   id: String
   name: String
   conversionFactor: Float
+  referenceServiceLife: Int
+  description: String
 }
 
 input AssemblyLayerUpdateInput {
@@ -21,6 +23,8 @@ input AssemblyLayerUpdateInput {
   epdId: String
   name: String
   conversionFactor: Float
+  referenceServiceLife: Int
+  description: String
 }
 
 enum AssemblyUnit {
@@ -80,11 +84,12 @@ type GraphQLAssembly {
   gwp(phases: [String!] = null): Float!
 }
 
-type GraphQLAssemblyLayer @keys(fields: "project_id") {
+type GraphQLAssemblyLayer {
   id: String
   name: String
   conversionFactor: Float
-  projectId: ID! @shareable
+  referenceServiceLife: Int
+  description: String
   epdId: String!
   epdName: String!
 }
