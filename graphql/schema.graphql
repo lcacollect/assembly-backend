@@ -86,12 +86,12 @@ type GraphQLAssembly {
 
 type GraphQLAssemblyLayer {
   id: String
+  epd: GraphQLProjectEPD!
   name: String
   conversionFactor: Float
   referenceServiceLife: Int
   description: String
   epdId: String!
-  epdName: String!
 }
 
 type GraphQLConversion {

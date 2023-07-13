@@ -1,29 +1,26 @@
-from typing import Optional
-
 import strawberry
-from lcacollect_config.exceptions import DatabaseItemNotFound
 from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
 from strawberry import UNSET
 from strawberry.types import Info
+from typing import Optional, Annotated, TYPE_CHECKING
 
 import models.assembly as models_assembly
 import models.epd as models_epd
 import models.links as models_links
-from schema.directives import Keys
+from lcacollect_config.exceptions import DatabaseItemNotFound
 
+if TYPE_CHECKING:  # pragma: no cover
+    from schema.epd import GraphQLProjectEPD
 
 @strawberry.type
 class GraphQLAssemblyLayer:
     id: str | None
+    epd: Annotated["GraphQLProjectEPD", strawberry.lazy("schema.epd")]
 
     @strawberry.field
     def epd_id(self) -> str:
         return self.epd.id
-
-    @strawberry.field
-    def epd_name(self) -> str:
-        return self.epd.name
 
     name: str | None
     conversion_factor: float | None
