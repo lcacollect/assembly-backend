@@ -2,7 +2,7 @@ import base64
 import logging
 from datetime import date
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional
 
 import strawberry
 from lcacollect_config.context import get_session
