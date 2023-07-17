@@ -1,17 +1,19 @@
+from typing import TYPE_CHECKING, Annotated, Optional
+
 import strawberry
+from lcacollect_config.exceptions import DatabaseItemNotFound
 from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
 from strawberry import UNSET
 from strawberry.types import Info
-from typing import Optional, Annotated, TYPE_CHECKING
 
 import models.assembly as models_assembly
 import models.epd as models_epd
 import models.links as models_links
-from lcacollect_config.exceptions import DatabaseItemNotFound
 
 if TYPE_CHECKING:  # pragma: no cover
     from schema.epd import GraphQLProjectEPD
+
 
 @strawberry.type
 class GraphQLAssemblyLayer:

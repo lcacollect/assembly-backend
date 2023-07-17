@@ -1,20 +1,21 @@
 import base64
 import logging
-import strawberry
 from datetime import date
 from enum import Enum
-from sqlalchemy import func
-from sqlmodel import select
-from strawberry import UNSET
-from strawberry.types import Info
 from typing import Optional
 
-import models.epd as models_epd
-import schema.assembly as schema_assembly
+import strawberry
 from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query, sort_model_query
 from lcacollect_config.graphql.pagination import Connection, Cursor, Edge, PageInfo
+from sqlalchemy import func
+from sqlmodel import select
+from strawberry import UNSET
+from strawberry.types import Info
+
+import models.epd as models_epd
+import schema.assembly as schema_assembly
 from schema.directives import Keys
 from schema.inputs import EPDFilters, EPDSort, ProjectEPDFilters
 
