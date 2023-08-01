@@ -53,6 +53,4 @@ backend:
   emailNotificationFrom: no-reply@arkitema.com
   internalEmailDomains: "arkitema,cowi,cowicloud"
   defaultAdFQDN: cowi.onmicrosoft.com
-  adTenantId: ""
-  adOpenApiClientId: ""
-  adAppClientId: ""
+
