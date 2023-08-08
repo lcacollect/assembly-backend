@@ -226,7 +226,7 @@ type Mutation {
   addProjectEpds(projectId: String!, epdIds: [String!]!): [GraphQLProjectEPD!]!
 
   """Delete a project EPD"""
-  deleteProjectEpd(id: String!): String!
+  deleteProjectEpds(ids: [String!]!): [String!]!
   addAssembly(name: String!, category: String!, projectId: String!, description: String, unit: AssemblyUnit!, lifeTime: Float = 50, metaFields: JSON = null, conversionFactor: Float = 1): GraphQLAssembly!
   deleteAssembly(id: String!): String!
   updateAssembly(id: String!, name: String = null, category: String = null, description: String = null, lifeTime: Float = null, metaFields: JSON = null, conversionFactor: Float = null, unit: AssemblyUnit = null): GraphQLAssembly!

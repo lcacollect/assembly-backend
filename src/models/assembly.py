@@ -36,4 +36,6 @@ class Assembly(SQLModel, table=True):
     project_id: str | None
     description: str | None
 
-    layers: list["AssemblyEPDLink"] = Relationship(back_populates="assembly")
+    layers: list["AssemblyEPDLink"] = Relationship(
+        back_populates="assembly", sa_relationship_kwargs={"cascade": "all,delete"}
+    )

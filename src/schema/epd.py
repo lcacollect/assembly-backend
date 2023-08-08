@@ -119,15 +119,16 @@ async def add_project_epds_mutation(info: Info, project_id: str, epd_ids: list[s
     return project_epds
 
 
-async def delete_project_epd_mutation(info: Info, id: str) -> str:
+async def delete_project_epds_mutation(info: Info, ids: list[str]) -> list[str]:
     """Delete a project EPD"""
 
-    session = info.context.get("session")
-    project_epd = await session.get(models_epd.ProjectEPD, id)
+    session = get_session(info)
+    for _id in ids:
+        project_epd = await session.get(models_epd.ProjectEPD, _id)
+        await session.delete(project_epd)
 
-    await session.delete(project_epd)
     await session.commit()
-    return id
+    return ids
 
 
 @strawberry.enum
