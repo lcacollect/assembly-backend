@@ -17,7 +17,7 @@ sqlalchemy = {extras = ["asyncio"], version = "==1.4.35"}
 lcacollect-config = "*"
 
 [dev-packages]
-pydevd-pycharm = "*"
+pydevd-pycharm = "~=232.8660.197"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-env = "*"
