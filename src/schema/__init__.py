@@ -31,10 +31,10 @@ class Mutation:
         resolver=schema_epd.add_project_epds_mutation,
         description=getdoc(schema_epd.add_project_epds_mutation),
     )
-    delete_project_epd: str = strawberry.mutation(
+    delete_project_epds: list[str] = strawberry.mutation(
         permission_classes=[IsAuthenticated],
-        resolver=schema_epd.delete_project_epd_mutation,
-        description=getdoc(schema_epd.delete_project_epd_mutation),
+        resolver=schema_epd.delete_project_epds_mutation,
+        description=getdoc(schema_epd.delete_project_epds_mutation),
     )
 
     # Assembly

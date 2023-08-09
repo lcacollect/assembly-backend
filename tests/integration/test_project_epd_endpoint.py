@@ -84,13 +84,15 @@ async def test_create_project_epd(client: AsyncClient, epds, project_id):
 @pytest.mark.asyncio
 async def test_delete_project_epd(client: AsyncClient, project_epds, db):
     epd = project_epds[0]
-    mutation = f"""
-        mutation {{
-            deleteProjectEpd(id: "{epd.id}")
-        }}
+    mutation = """
+        mutation($ids: [String!]!) {
+            deleteProjectEpds(ids: $ids)
+        }
     """
 
-    response = await client.post(f"{settings.API_STR}/graphql", json={"query": mutation, "variables": None})
+    response = await client.post(
+        f"{settings.API_STR}/graphql", json={"query": mutation, "variables": {"ids": [epd.id]}}
+    )
 
     assert response.status_code == 200
     data = response.json()
