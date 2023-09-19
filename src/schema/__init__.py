@@ -8,6 +8,7 @@ import schema.assembly as schema_assembly
 import schema.assembly_layer as schema_assembly_layer
 import schema.epd as schema_epd
 from core import federation
+from core.permissions import IsAdmin
 
 
 @strawberry.type
@@ -35,6 +36,17 @@ class Mutation:
         permission_classes=[IsAuthenticated],
         resolver=schema_epd.delete_project_epds_mutation,
         description=getdoc(schema_epd.delete_project_epds_mutation),
+    )
+
+    add_epds: list[schema_epd.GraphQLEPD] = strawberry.mutation(
+        permission_classes=[IsAdmin],
+        resolver=schema_epd.add_epds_mutation,
+        description=getdoc(schema_epd.add_epds_mutation),
+    )
+    delete_epds: list[str] = strawberry.mutation(
+        permission_classes=[IsAdmin],
+        resolver=schema_epd.delete_epds_mutation,
+        description=getdoc(schema_epd.delete_epds_mutation),
     )
 
     # Assembly
