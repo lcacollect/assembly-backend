@@ -6,6 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.config import settings
 from models.assembly import Assembly
+from schema.assembly_layer import TransportType
 
 
 @pytest.mark.asyncio
@@ -95,3 +96,38 @@ async def test_delete_assembly_layers(client: AsyncClient, assembly_with_layers,
         assembly = (await session.exec(query)).one()
 
     assert len(assembly.layers) == len(project_epds) - 1
+
+
+@pytest.mark.asyncio
+async def test_add_assembly_layers_with_transport(client: AsyncClient, assemblies, project_epds):
+    assembly = assemblies[0]
+    transport_type = TransportType("plane").name
+    mutation = f"""
+        mutation {{
+            addAssemblyLayers(
+                id: "{assembly.id}"
+                layers: [{', '.join([f'{{epdId: "{epd.id}", conversionFactor: 3, name: "Layer: {epd.name}", transportType: {transport_type}, transportDistance: 30, transportUnit: "km" }}' for epd in project_epds])}]
+            ) {{
+                name
+                conversionFactor
+                transportType
+                transportDistance
+                transportUnit
+            }}
+        }}
+    """
+
+    response = await client.post(f"{settings.API_STR}/graphql", json={"query": mutation, "variables": None})
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    assert len(data["data"]["addAssemblyLayers"]) == 3
+    assert data["data"]["addAssemblyLayers"][0] == {
+        "name": "Layer: EPD 0",
+        "conversionFactor": 3.0,
+        "transportDistance": 30.0,
+        "transportType": "plane",
+        "transportUnit": "km",
+    }
