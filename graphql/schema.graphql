@@ -76,6 +76,29 @@ input FilterOptions {
   jsonContains: String = null
 }
 
+input GraphQLAddEpdInput {
+  id: String = null
+  name: String!
+  version: String!
+  declaredUnit: GraphQLUnit!
+  validUntil: Date!
+  publishedDate: Date!
+  source: JSON!
+  location: String!
+  subtype: String!
+  referenceServiceLife: Int = null
+  comment: String = null
+  gwp: JSON = null
+  odp: JSON = null
+  ap: JSON = null
+  ep: JSON = null
+  pocp: JSON = null
+  penre: JSON = null
+  pere: JSON = null
+  metaFields: JSON = null
+  conversions: JSON = null
+}
+
 type GraphQLAssembly {
   id: String!
   name: String!
@@ -217,8 +240,8 @@ enum GraphQLUnit {
   M
   M2
   M3
-  kg
-  Tones
+  KG
+  TONES
   PCS
   L
   M2R1
@@ -236,6 +259,12 @@ type Mutation {
 
   """Delete a project EPD"""
   deleteProjectEpds(ids: [String!]!): [String!]!
+
+  """Add Global EPDs."""
+  addEpds(epds: [GraphQLAddEpdInput!]!): [GraphQLEPD!]!
+
+  """Delete a global EPD"""
+  deleteEpds(ids: [String!]!): [String!]!
   addAssembly(name: String!, category: String!, projectId: String!, description: String, unit: AssemblyUnit!, lifeTime: Float = 50, metaFields: JSON = null, conversionFactor: Float = 1): GraphQLAssembly!
   deleteAssembly(id: String!): String!
   updateAssembly(id: String!, name: String = null, category: String = null, description: String = null, lifeTime: Float = null, metaFields: JSON = null, conversionFactor: Float = null, unit: AssemblyUnit = null): GraphQLAssembly!

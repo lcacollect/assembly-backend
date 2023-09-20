@@ -7,11 +7,13 @@ from typing import Optional
 import strawberry
 from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
+from lcacollect_config.formatting import string_uuid
 from lcacollect_config.graphql.input_filters import filter_model_query, sort_model_query
 from lcacollect_config.graphql.pagination import Connection, Cursor, Edge, PageInfo
 from sqlalchemy import func
 from sqlmodel import select
 from strawberry import UNSET
+from strawberry.scalars import JSON
 from strawberry.types import Info
 
 import models.epd as models_epd
@@ -131,13 +133,61 @@ async def delete_project_epds_mutation(info: Info, ids: list[str]) -> list[str]:
     return ids
 
 
+async def add_epds_mutation(info: Info, epds: list["GraphQLAddEpdInput"]) -> list["GraphQLEPD"]:
+    """Add Global EPDs."""
+    session = get_session(info)
+
+    _epds = []
+    for epd_input in epds:
+        epd = models_epd.EPD(
+            id=epd_input.id if epd_input.id else string_uuid(),
+            name=epd_input.name,
+            version=epd_input.version,
+            declared_unit=epd_input.declared_unit,
+            valid_until=epd_input.valid_until,
+            published_date=epd_input.published_date,
+            source=epd_input.source.get("name"),
+            location=epd_input.location,
+            subtype=epd_input.subtype,
+            reference_service_life=epd_input.reference_service_life,
+            comment=epd_input.comment,
+            gwp=epd_input.gwp,
+            odp=epd_input.odp,
+            ap=epd_input.ap,
+            ep=epd_input.ep,
+            pocp=epd_input.pocp,
+            penre=epd_input.penre,
+            pere=epd_input.pere,
+            meta_fields=epd_input.meta_fields,
+            conversions=epd_input.conversions,
+        )
+        _epds.append(epd)
+        session.add(epd)
+
+    await session.commit()
+    [await session.refresh(epd) for epd in _epds]
+    return _epds
+
+
+async def delete_epds_mutation(info: Info, ids: list[str]) -> list[str]:
+    """Delete a global EPD"""
+
+    session = get_session(info)
+    for _id in ids:
+        project_epd = await session.get(models_epd.EPD, _id)
+        await session.delete(project_epd)
+
+    await session.commit()
+    return ids
+
+
 @strawberry.enum
 class GraphQLUnit(Enum):
     M = "M"
     M2 = "M2"
     M3 = "M3"
-    kg = "KG"
-    Tones = "Tones"
+    KG = "KG"
+    TONES = "TONES"
     PCS = "PCS"
     L = "L"
     M2R1 = "M2R1"
@@ -186,6 +236,36 @@ class GraphQLImpactCategory(Enum):
     c3 = "c3"
     c4 = "c4"
     d = "d"
+
+
+@strawberry.input
+class GraphQLSource:
+    name: str
+    url: str | None = None
+
+
+@strawberry.input
+class GraphQLAddEpdInput:
+    id: str | None = None
+    name: str
+    version: str
+    declared_unit: GraphQLUnit
+    valid_until: date
+    published_date: date
+    source: JSON
+    location: str
+    subtype: str
+    reference_service_life: int | None = None
+    comment: str | None = None
+    gwp: JSON | None = None
+    odp: JSON | None = None
+    ap: JSON | None = None
+    ep: JSON | None = None
+    pocp: JSON | None = None
+    penre: JSON | None = None
+    pere: JSON | None = None
+    meta_fields: JSON | None = None
+    conversions: JSON | None = None
 
 
 @strawberry.type

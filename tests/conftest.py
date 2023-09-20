@@ -65,6 +65,7 @@ def mock_azure_scheme(mocker):
         openid_config = ConfigClass()
         # fake user object fields
         claims = {"oid": "someid"}
+        roles = ["lca_super_admin"]
 
     mocker.patch.object(
         lcacollect_config.security,
