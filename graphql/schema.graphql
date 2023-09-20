@@ -16,15 +16,21 @@ input AssemblyLayerInput {
   conversionFactor: Float
   referenceServiceLife: Int
   description: String
+  transportType: TransportType
+  transportDistance: Float
+  transportUnit: String
 }
 
 input AssemblyLayerUpdateInput {
+  epdId: String!
   id: String!
-  epdId: String
   name: String
   conversionFactor: Float
   referenceServiceLife: Int
   description: String
+  transportType: TransportType
+  transportDistance: Float
+  transportUnit: String
 }
 
 enum AssemblyUnit {
@@ -91,6 +97,9 @@ type GraphQLAssemblyLayer {
   conversionFactor: Float
   referenceServiceLife: Int
   description: String
+  transportType: TransportType
+  transportDistance: Float
+  transportUnit: String
   epdId: String!
 }
 
@@ -265,6 +274,13 @@ type Query {
 enum SortOptions {
   ASC
   DSC
+}
+
+enum TransportType {
+  truck
+  train
+  ship
+  plane
 }
 
 scalar _Any

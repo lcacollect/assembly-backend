@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Annotated, Optional
+from enum import Enum
+from typing import TYPE_CHECKING, Annotated
 
 import strawberry
 from lcacollect_config.exceptions import DatabaseItemNotFound
@@ -15,6 +16,14 @@ if TYPE_CHECKING:  # pragma: no cover
     from schema.epd import GraphQLProjectEPD
 
 
+@strawberry.enum
+class TransportType(Enum):
+    truck = "truck"
+    train = "train"
+    ship = "ship"
+    plane = "plane"
+
+
 @strawberry.type
 class GraphQLAssemblyLayer:
     id: str | None
@@ -29,15 +38,23 @@ class GraphQLAssemblyLayer:
     reference_service_life: int | None
     description: str | None
 
+    transport_type: TransportType | None
+    transport_distance: float | None
+    transport_unit: str | None
+
 
 @strawberry.input
 class AssemblyLayerInput:
     epd_id: str
-    id: Optional[str] = UNSET
-    name: Optional[str] = UNSET
-    conversion_factor: Optional[float] = UNSET
-    reference_service_life: Optional[int] = UNSET
-    description: Optional[str] = UNSET
+    id: str | None = UNSET
+    name: str | None = UNSET
+    conversion_factor: float | None = UNSET
+    reference_service_life: int | None = UNSET
+    description: str | None = UNSET
+
+    transport_type: TransportType | None = UNSET
+    transport_distance: float | None = UNSET
+    transport_unit: str | None = UNSET
 
 
 async def add_assembly_layers_mutation(
@@ -90,12 +107,16 @@ async def delete_assembly_layers_mutation(
 
 @strawberry.input
 class AssemblyLayerUpdateInput:
+    epd_id: str
     id: str
-    epd_id: Optional[str] = UNSET
-    name: Optional[str] = UNSET
-    conversion_factor: Optional[float] = UNSET
-    reference_service_life: Optional[int] = UNSET
-    description: Optional[str] = UNSET
+    name: str | None = UNSET
+    conversion_factor: float | None = UNSET
+    reference_service_life: int | None = UNSET
+    description: str | None = UNSET
+
+    transport_type: TransportType | None = UNSET
+    transport_distance: float | None = UNSET
+    transport_unit: str | None = UNSET
 
 
 async def update_assembly_layers_mutation(
@@ -121,6 +142,9 @@ async def update_assembly_layers_mutation(
             "epd_id": layer.epd_id,
             "reference_service_life": layer.reference_service_life,
             "description": layer.description,
+            "transport_type": layer.transport_type.value if layer.transport_type else None,
+            "transport_distance": layer.transport_distance,
+            "transport_unit": layer.transport_unit,
         }
         for key, value in kwargs.items():
             if value:
@@ -167,6 +191,9 @@ async def add_layer_to_assembly(layer: AssemblyLayerInput, assembly, session) ->
         name=layer.name,
         description=layer.description,
         reference_service_life=layer.reference_service_life,
+        transport_type=layer.transport_type.value if layer.transport_type else None,
+        transport_distance=layer.transport_distance,
+        transport_unit=layer.transport_unit,
     )
     session.add(link)
 

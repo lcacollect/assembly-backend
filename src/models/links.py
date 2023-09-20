@@ -18,5 +18,9 @@ class AssemblyEPDLink(SQLModel, table=True):
     reference_service_life: Optional[int] = None
     description: str = ""
     name: str = ""
+    transport_type: Optional[str] = None
+    transport_distance: Optional[float] = None
+    transport_unit: Optional[str] = None
+
     assembly: "Assembly" = Relationship(back_populates="layers")
     epd: "ProjectEPD" = Relationship(back_populates="assembly_links")
