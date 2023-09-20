@@ -160,4 +160,4 @@ def calculate_indicator(data_by_phases: dict, phases: list[str] | None) -> float
     if phases:
         return sum([data_by_phases.get(phase, 0) for phase in phases])
     else:
-        return data_by_phases.get("a1a3", 0)
+        return data_by_phases.get("a1a3", 0) or 0
