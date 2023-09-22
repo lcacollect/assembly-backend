@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import JSON
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from models.links import AssemblyEPDLink
+    from models.links import ProjectAssemblyEPDLink
 
 
 class AssemblyUnit(str, Enum):
@@ -18,7 +18,7 @@ class AssemblyUnit(str, Enum):
     pcs = "Pcs"
 
 
-class Assembly(SQLModel, table=True):
+class ProjectAssembly(SQLModel, table=True):
     """Assembly database class"""
 
     id: Optional[str] = Field(
@@ -33,9 +33,9 @@ class Assembly(SQLModel, table=True):
     meta_fields: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
     unit: str = "M2"
     conversion_factor: float = 1.0
-    project_id: str | None
+    project_id: str
     description: str | None
 
-    layers: list["AssemblyEPDLink"] = Relationship(
+    layers: list["ProjectAssemblyEPDLink"] = Relationship(
         back_populates="assembly", sa_relationship_kwargs={"cascade": "all,delete"}
     )

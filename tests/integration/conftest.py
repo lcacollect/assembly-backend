@@ -1,24 +1,23 @@
 from datetime import date
 
 import pytest
-from lcacollect_config.connection import create_postgres_engine
-from mixer.backend.sqlalchemy import Mixer
-from sqlalchemy.orm import selectinload, sessionmaker
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from models.assembly import Assembly
+from graphql_types.assembly_layer import AssemblyLayerInput
+from models.assembly import ProjectAssembly
 from models.epd import EPD, ProjectEPD
-from models.links import AssemblyEPDLink
-from schema.assembly_layer import AssemblyLayerInput, add_layer_to_assembly
+from models.links import ProjectAssemblyEPDLink
+from schema.assembly_layer import add_layer_to_assembly
 
 
 @pytest.fixture
-async def assemblies(db, project_id) -> list[Assembly]:
+async def assemblies(db, project_id) -> list[ProjectAssembly]:
     assemblies = []
     async with AsyncSession(db) as session:
         for i in range(3):
-            assembly = Assembly(
+            assembly = ProjectAssembly(
                 name=f"Assembly {i}",
                 category="My Category",
                 meta_fields={},
@@ -97,7 +96,7 @@ async def project_epds(db, epds, project_id) -> list[ProjectEPD]:
 
 
 @pytest.fixture
-async def assembly_with_layers(db, assemblies, project_epds) -> Assembly:
+async def assembly_with_layers(db, assemblies, project_epds) -> ProjectAssembly:
     assembly = assemblies[0]
     async with AsyncSession(db) as session:
         for epd in project_epds:
@@ -109,8 +108,8 @@ async def assembly_with_layers(db, assemblies, project_epds) -> Assembly:
 
             await session.commit()
             await session.refresh(assembly)
-        query = select(Assembly).where(Assembly.id == assembly.id)
-        query = query.options(selectinload(Assembly.layers).options(selectinload(AssemblyEPDLink.epd)))
+        query = select(ProjectAssembly).where(ProjectAssembly.id == assembly.id)
+        query = query.options(selectinload(ProjectAssembly.layers).options(selectinload(ProjectAssemblyEPDLink.epd)))
 
         assembly = (await session.exec(query)).first()
 

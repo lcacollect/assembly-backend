@@ -11,10 +11,10 @@ import models.assembly as models_assembly
 import models.links as models_links
 from core.config import settings
 from core.exceptions import MicroServiceConnectionError, MicroServiceResponseError
-from schema.assembly import GraphQLAssembly
+from schema.assembly import GraphQLProjectAssembly
 
 
-async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLAssembly | None:
+async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLProjectAssembly | None:
     """
     Fetches assembly of a schemaElement
     """
@@ -27,7 +27,7 @@ async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLAssem
         )
         element = (await session.exec(query)).first()
         if element:
-            return GraphQLAssembly(
+            return GraphQLProjectAssembly(
                 id=element.id,
                 name=element.name,
                 project_id=element.project_id,
@@ -47,7 +47,7 @@ async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLAssem
 class GraphQLSchemaElement:
     id: strawberry.ID
     assembly_id: str | None = strawberry.federation.field(shareable=True)
-    assembly: Optional[Annotated["GraphQLAssembly", strawberry.lazy("schema.assembly")]] = strawberry.field(
+    assembly: Optional[Annotated["GraphQLProjectAssembly", strawberry.lazy("schema.assembly")]] = strawberry.field(
         resolver=get_assembly
     )
 

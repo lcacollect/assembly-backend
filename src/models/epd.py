@@ -6,7 +6,7 @@ from sqlalchemy import Column, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON
 from sqlmodel import Field, Relationship, SQLModel
 
-from models.links import AssemblyEPDLink
+from models.links import ProjectAssemblyEPDLink
 
 
 class EPDBase(SQLModel):
@@ -63,7 +63,7 @@ class ProjectEPD(EPDBase, table=True):
     # Relationships
     origin_id: str = Field(foreign_key="epd.id")
     origin: EPD = Relationship(back_populates="project_epds")
-    assembly_links: list[AssemblyEPDLink] = Relationship(back_populates="epd")
+    assembly_links: list[ProjectAssemblyEPDLink] = Relationship(back_populates="epd")
 
     @classmethod
     def create_from_epd(cls, epd: EPD, project_id: str):

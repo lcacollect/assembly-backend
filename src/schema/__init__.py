@@ -13,8 +13,11 @@ from core.permissions import IsAdmin
 
 @strawberry.type
 class Query:
-    assemblies: list[schema_assembly.GraphQLAssembly] = strawberry.field(
-        permission_classes=[IsAuthenticated], resolver=schema_assembly.assemblies_query
+    # assemblies: list[schema_assembly.GraphQLAssembly] = strawberry.field(
+    #     permission_classes=[IsAuthenticated], resolver=schema_assembly.assemblies_query
+    # )
+    project_assemblies: list[schema_assembly.GraphQLProjectAssembly] = strawberry.field(
+        permission_classes=[IsAuthenticated], resolver=schema_assembly.project_assemblies_query
     )
 
     epds: Connection[schema_epd.GraphQLEPD] = strawberry.field(resolver=schema_epd.epds_query)
@@ -50,30 +53,30 @@ class Mutation:
     )
 
     # Assembly
-    add_assembly: schema_assembly.GraphQLAssembly = strawberry.mutation(
+    add_project_assemblies: list[schema_assembly.GraphQLProjectAssembly] = strawberry.mutation(
         permission_classes=[IsAuthenticated],
-        resolver=schema_assembly.add_assembly_mutation,
+        resolver=schema_assembly.add_project_assemblies_mutation,
     )
-    delete_assembly: str = strawberry.mutation(
+    delete_project_assemblies: list[str] = strawberry.mutation(
         permission_classes=[IsAuthenticated],
-        resolver=schema_assembly.delete_assembly_mutation,
+        resolver=schema_assembly.delete_project_assemblies_mutation,
     )
-    update_assembly: schema_assembly.GraphQLAssembly = strawberry.mutation(
+    update_project_assemblies: list[schema_assembly.GraphQLProjectAssembly] = strawberry.mutation(
         permission_classes=[IsAuthenticated],
-        resolver=schema_assembly.update_assembly_mutation,
+        resolver=schema_assembly.update_project_assemblies_mutation,
     )
     # Assembly Layers
-    add_assembly_layers: list[schema_assembly_layer.GraphQLAssemblyLayer] = strawberry.mutation(
+    add_project_assembly_layers: list[schema_assembly_layer.GraphQLAssemblyLayer] = strawberry.mutation(
         permission_classes=[IsAuthenticated],
-        resolver=schema_assembly_layer.add_assembly_layers_mutation,
+        resolver=schema_assembly_layer.add_project_assembly_layers_mutation,
     )
-    delete_assembly_layers: list[str] = strawberry.mutation(
+    delete_project_assembly_layers: list[str] = strawberry.mutation(
         permission_classes=[IsAuthenticated],
-        resolver=schema_assembly_layer.delete_assembly_layers_mutation,
+        resolver=schema_assembly_layer.delete_project_assembly_layers_mutation,
     )
-    update_assembly_layers: list[schema_assembly_layer.GraphQLAssemblyLayer] = strawberry.mutation(
+    update_project_assembly_layers: list[schema_assembly_layer.GraphQLAssemblyLayer] = strawberry.mutation(
         permission_classes=[IsAuthenticated],
-        resolver=schema_assembly_layer.update_assembly_layers_mutation,
+        resolver=schema_assembly_layer.update_project_assembly_layers_mutation,
     )
 
 

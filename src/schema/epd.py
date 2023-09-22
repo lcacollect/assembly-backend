@@ -340,5 +340,5 @@ class GraphQLEPD(GraphQLEPDBase):
 class GraphQLProjectEPD(GraphQLEPDBase):
     origin_id: str
 
-    assemblies: list["schema_assembly.GraphQLAssembly"] | None
+    assemblies: list["schema_assembly.GraphQLProjectAssembly"] | None
     project_id: strawberry.ID = strawberry.federation.field(shareable=True)

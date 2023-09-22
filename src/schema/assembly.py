@@ -1,163 +1,117 @@
-from enum import Enum
-from typing import Optional
+import logging
 
-import strawberry
 from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
-from strawberry.scalars import JSON
+from sqlmodel import select, col
 from strawberry.types import Info
 
-import models.assembly as models_assembly
-import models.links as models_links
-import schema.assembly_layer as schema_assembly_layer
+from core.validate import authenticate_project
+from graphql_types.assembly import ProjectAssemblyUpdateInput, GraphQLProjectAssembly, ProjectAssemblyAddInput
+from models.assembly import ProjectAssembly
+from models.links import ProjectAssemblyEPDLink
+
+logger = logging.getLogger(__name__)
 
 
-@strawberry.enum
-class AssemblyUnit(Enum):
-    m = "M"
-    m2 = "M2"
-    m3 = "M3"
-    kg = "KG"
-    pcs = "Pcs"
+async def project_assemblies_query(info: Info, project_id: str) -> list[GraphQLProjectAssembly]:
+    """Get project assemblies"""
 
-
-@strawberry.type
-class GraphQLAssembly:
-    id: str
-    name: str
-    project_id: str
-    category: str | None
-    life_time: float
-    meta_fields: JSON | None
-    unit: AssemblyUnit | None
-    conversion_factor: float
-    description: str | None
-
-    layers: list[schema_assembly_layer.GraphQLAssemblyLayer] | None
-
-    @strawberry.field
-    def gwp(self, phases: list[str] | None = None) -> float:
-        """Calculate the gwp of the assembly based on the underlying layers."""
-
-        if self.layers:
-            return sum([calculate_indicator(layer.epd.gwp, phases) * layer.conversion_factor for layer in self.layers])
-        return 0
-
-
-async def assemblies_query(info: Info, project_id: str) -> list[GraphQLAssembly]:
     session = get_session(info)
 
-    query = select(models_assembly.Assembly).where(models_assembly.Assembly.project_id == project_id)
-    if category_field := [field for field in info.selected_fields if field.name == "assemblies"]:
-        if [field for field in category_field[0].selections if field.name in ["layers", "gwp"]]:
-            query = query.options(
-                selectinload(models_assembly.Assembly.layers).options(selectinload(models_links.AssemblyEPDLink.epd))
-            )
+    category_field = [field for field in info.selected_fields if field.name == "projectAssemblies"]
+    query = select(ProjectAssembly).where(ProjectAssembly.project_id == project_id)
+    query = await assembly_query_options(query, category_field)
 
-    assemblies = await session.exec(query)
-
-    return assemblies.all()
+    return (await session.exec(query)).all()
 
 
-async def add_assembly_mutation(
-    info: Info,
-    name: str,
-    category: str,
-    project_id: str,
-    description: str | None,
-    unit: AssemblyUnit = None,
-    life_time: float | None = 50,
-    meta_fields: Optional[JSON] = None,
-    conversion_factor: float | None = 1,
-) -> GraphQLAssembly:
-    if meta_fields is None:
-        meta_fields = {}
+async def add_project_assemblies_mutation(
+    info: Info, assemblies: list[ProjectAssemblyAddInput]
+) -> list[GraphQLProjectAssembly]:
+    """Add Project Assemblies"""
+    session = get_session(info)
+    _assemblies = []
 
-    session = info.context.get("session")
+    for assembly_input in assemblies:
+        await authenticate_project(info, assembly_input.project_id)
 
-    assembly = models_assembly.Assembly(
-        name=name,
-        project_id=project_id,
-        category=category,
-        life_time=life_time,
-        description=description,
-        conversion_factor=conversion_factor,
-        meta_fields=meta_fields,
-        unit=unit.value if unit else None,
-    )
-
-    session.add(assembly)
-
-    await session.commit()
-    await session.refresh(assembly)
-    query = select(models_assembly.Assembly).where(models_assembly.Assembly.id == assembly.id)
-    if [field for field in info.selected_fields if field.name == "layers"]:
-        query = query.options(
-            selectinload(models_assembly.Assembly.layers).options(selectinload(models_links.AssemblyEPDLink.epd))
+        assembly = ProjectAssembly(
+            name=assembly_input.name,
+            project_id=assembly_input.project_id,
+            category=assembly_input.category,
+            life_time=assembly_input.life_time,
+            description=assembly_input.description,
+            conversion_factor=assembly_input.conversion_factor,
+            meta_fields=assembly_input.meta_fields if assembly_input.meta_fields is not None else {},
+            unit=assembly_input.unit.value if assembly_input.unit else None,
         )
 
-    await session.exec(query)
-
-    return assembly
-
-
-async def update_assembly_mutation(
-    info: Info,
-    id: str,
-    name: str | None = None,
-    category: str | None = None,
-    description: str | None = None,
-    life_time: float | None = None,
-    meta_fields: Optional[JSON] = None,
-    conversion_factor: float | None = None,
-    unit: AssemblyUnit | None = None,
-) -> GraphQLAssembly:
-    session = info.context.get("session")
-    assembly = await session.get(models_assembly.Assembly, id)
-    if not assembly:
-        raise DatabaseItemNotFound(f"Could not find Assembly with id: {id}")
-
-    kwargs = {
-        "name": name,
-        "category": category,
-        "description": description,
-        "life_time": life_time,
-        "meta_fields": meta_fields,
-        "conversion_factor": conversion_factor,
-        "unit": unit.value if unit else None,
-    }
-    for key, value in kwargs.items():
-        if value:
-            setattr(assembly, key, value)
-
-    session.add(assembly)
+        session.add(assembly)
+        _assemblies.append(assembly)
+        logger.info(f"Adding project assembly with id: {assembly.id}")
 
     await session.commit()
-    await session.refresh(assembly)
-    query = (
-        select(models_assembly.Assembly)
-        .where(models_assembly.Assembly.id == assembly.id)
-        .options(selectinload(models_assembly.Assembly.layers).options(selectinload(models_links.AssemblyEPDLink.epd)))
-    )
-    await session.exec(query)
-    return assembly
+    [await session.refresh(assembly) for assembly in _assemblies]
+
+    category_field = [field for field in info.selected_fields if field.name == "addProjectAssemblies"]
+    query = select(ProjectAssembly).where(col(ProjectAssembly.id).in_([assembly.id for assembly in _assemblies]))
+    query = await assembly_query_options(query, category_field)
+    return (await session.exec(query)).all()
 
 
-async def delete_assembly_mutation(info: Info, id: str) -> str:
-    """Delete an Assembly"""
+async def update_project_assemblies_mutation(
+    info: Info, assemblies: list[ProjectAssemblyUpdateInput]
+) -> list[GraphQLProjectAssembly]:
+    """Update Project Assemblies"""
 
-    session = info.context.get("session")
-    assembly = await session.get(models_assembly.Assembly, id)
+    session = get_session(info)
+    _assemblies = []
+    for assembly_input in assemblies:
+        assembly = await session.get(ProjectAssembly, assembly_input.id)
+        if not assembly:
+            raise DatabaseItemNotFound(f"Could not find Assembly with id: {assembly_input.id}")
 
-    await session.delete(assembly)
+        kwargs = {
+            "name": assembly_input.name,
+            "category": assembly_input.category,
+            "description": assembly_input.description,
+            "life_time": assembly_input.life_time,
+            "meta_fields": assembly_input.meta_fields,
+            "conversion_factor": assembly_input.conversion_factor,
+            "unit": assembly_input.unit.value if assembly_input.unit else None,
+        }
+        for key, value in kwargs.items():
+            if value:
+                setattr(assembly, key, value)
+
+        session.add(assembly)
+        logger.info(f"Updating project assembly with id: {assembly.id}")
+
     await session.commit()
-    return id
+
+    category_field = [field for field in info.selected_fields if field.name == "updateProjectAssemblies"]
+    query = select(ProjectAssembly).where(col(ProjectAssembly.id).in_([assembly.id for assembly in assemblies]))
+    query = await assembly_query_options(query, category_field)
+
+    return (await session.exec(query)).all()
 
 
-def calculate_indicator(data_by_phases: dict, phases: list[str] | None) -> float:
-    if phases:
-        return sum([data_by_phases.get(phase, 0) for phase in phases])
-    else:
-        return data_by_phases.get("a1a3", 0) or 0
+async def delete_project_assemblies_mutation(info: Info, ids: list[str]) -> list[str]:
+    """Delete Project Assemblies"""
+
+    session = get_session(info)
+
+    for _id in ids:
+        logger.info(f"Deleting project assembly with id: {_id}")
+        assembly = await session.get(ProjectAssembly, _id)
+        await session.delete(assembly)
+
+    await session.commit()
+    return ids
+
+
+async def assembly_query_options(query, category_field):
+    if category_field and [field for field in category_field[0].selections if field.name in ["layers", "gwp"]]:
+        return query.options(selectinload(ProjectAssembly.layers).options(selectinload(ProjectAssemblyEPDLink.epd)))
+    return query

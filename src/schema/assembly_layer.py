@@ -1,69 +1,28 @@
-from enum import Enum
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
 import strawberry
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
-from strawberry import UNSET
 from strawberry.types import Info
 
-import models.assembly as models_assembly
 import models.epd as models_epd
-import models.links as models_links
+from models.links import ProjectAssemblyEPDLink
+from graphql_types.assembly_layer import AssemblyLayerInput, GraphQLAssemblyLayer
+from graphql_types.assembly_layer import AssemblyLayerUpdateInput
+from models.assembly import ProjectAssembly
 
 if TYPE_CHECKING:  # pragma: no cover
-    from schema.epd import GraphQLProjectEPD
+    pass
 
 
-@strawberry.enum
-class TransportType(Enum):
-    truck = "truck"
-    train = "train"
-    ship = "ship"
-    plane = "plane"
-
-
-@strawberry.type
-class GraphQLAssemblyLayer:
-    id: str | None
-    epd: Annotated["GraphQLProjectEPD", strawberry.lazy("schema.epd")]
-
-    @strawberry.field
-    def epd_id(self) -> str:
-        return self.epd.id
-
-    name: str | None
-    conversion_factor: float | None
-    reference_service_life: int | None
-    description: str | None
-
-    transport_type: TransportType | None
-    transport_distance: float | None
-    transport_unit: str | None
-
-
-@strawberry.input
-class AssemblyLayerInput:
-    epd_id: str
-    id: str | None = UNSET
-    name: str | None = UNSET
-    conversion_factor: float | None = UNSET
-    reference_service_life: int | None = UNSET
-    description: str | None = UNSET
-
-    transport_type: TransportType | None = UNSET
-    transport_distance: float | None = UNSET
-    transport_unit: str | None = UNSET
-
-
-async def add_assembly_layers_mutation(
+async def add_project_assembly_layers_mutation(
     info: Info,
     id: str,
     layers: list[AssemblyLayerInput],
 ) -> list[GraphQLAssemblyLayer]:
     session = info.context.get("session")
-    assembly = await session.get(models_assembly.Assembly, id)
+    assembly = await session.get(ProjectAssembly, id)
     if not assembly:
         raise DatabaseItemNotFound(f"Could not find Assembly with id: {id}")
 
@@ -80,22 +39,22 @@ class AssemblyLayerDeleteInput:
     id: str
 
 
-async def delete_assembly_layers_mutation(
+async def delete_project_assembly_layers_mutation(
     info: Info,
     id: str,
     layers: list[AssemblyLayerDeleteInput],
 ) -> list[str]:
     session = info.context.get("session")
-    assembly = await session.get(models_assembly.Assembly, id)
+    assembly = await session.get(ProjectAssembly, id)
     if not assembly:
         raise DatabaseItemNotFound(f"Could not find Assembly with id: {id}")
 
     deleted_epds = []
 
     for layer in layers:
-        query = select(models_links.AssemblyEPDLink).where(
-            models_links.AssemblyEPDLink.id == layer.id,
-            models_links.AssemblyEPDLink.assembly_id == assembly.id,
+        query = select(ProjectAssemblyEPDLink).where(
+            ProjectAssemblyEPDLink.id == layer.id,
+            ProjectAssemblyEPDLink.assembly_id == assembly.id,
         )
         link = (await session.exec(query)).one()
         await session.delete(link)
@@ -105,35 +64,22 @@ async def delete_assembly_layers_mutation(
     return deleted_epds
 
 
-@strawberry.input
-class AssemblyLayerUpdateInput:
-    epd_id: str
-    id: str
-    name: str | None = UNSET
-    conversion_factor: float | None = UNSET
-    reference_service_life: int | None = UNSET
-    description: str | None = UNSET
 
-    transport_type: TransportType | None = UNSET
-    transport_distance: float | None = UNSET
-    transport_unit: str | None = UNSET
-
-
-async def update_assembly_layers_mutation(
+async def update_project_assembly_layers_mutation(
     info: Info,
     id: str,
     layers: list[AssemblyLayerUpdateInput],
 ) -> list[GraphQLAssemblyLayer]:
     session = info.context.get("session")
-    assembly = await session.get(models_assembly.Assembly, id)
+    assembly = await session.get(ProjectAssembly, id)
     if not assembly:
         raise DatabaseItemNotFound(f"Could not find Assembly with id: {id}")
 
     epd_links = []
     for layer in layers:
-        query = select(models_links.AssemblyEPDLink).where(
-            models_links.AssemblyEPDLink.id == layer.id,
-            models_links.AssemblyEPDLink.assembly_id == assembly.id,
+        query = select(ProjectAssemblyEPDLink).where(
+            ProjectAssemblyEPDLink.id == layer.id,
+            ProjectAssemblyEPDLink.assembly_id == assembly.id,
         )
         link = (await session.exec(query)).one()
         kwargs = {
@@ -156,9 +102,9 @@ async def update_assembly_layers_mutation(
     await session.commit()
 
     query = (
-        select(models_links.AssemblyEPDLink)
-        .where(col(models_links.AssemblyEPDLink.id).in_([layer.id for layer in layers]))
-        .options(selectinload(models_links.AssemblyEPDLink.epd))
+        select(ProjectAssemblyEPDLink)
+        .where(col(ProjectAssemblyEPDLink.id).in_([layer.id for layer in layers]))
+        .options(selectinload(ProjectAssemblyEPDLink.epd))
     )
 
     return (await session.exec(query)).all()
@@ -173,7 +119,7 @@ async def get_assembly_layers(layers: list[AssemblyLayerInput], session) -> list
     return epds.all()
 
 
-async def add_layer_to_assembly(layer: AssemblyLayerInput, assembly, session) -> models_links.AssemblyEPDLink:
+async def add_layer_to_assembly(layer: AssemblyLayerInput, assembly, session) -> ProjectAssemblyEPDLink:
     """Add an EPD layer to an Assembly"""
 
     epd = await session.get(models_epd.ProjectEPD, layer.epd_id)
@@ -182,7 +128,7 @@ async def add_layer_to_assembly(layer: AssemblyLayerInput, assembly, session) ->
             f"Assembly projectId: {assembly.project_id} does not match epd's projectId: {epd.project_id}"
         )
 
-    link = models_links.AssemblyEPDLink(
+    link = ProjectAssemblyEPDLink(
         assembly=assembly,
         assembly_id=assembly.id,
         epd=epd,

@@ -5,8 +5,8 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.config import settings
-from models.assembly import Assembly
-from schema.assembly_layer import TransportType
+from models.assembly import ProjectAssembly
+from graphql_types.assembly_layer import TransportType
 
 
 @pytest.mark.asyncio
@@ -14,7 +14,7 @@ async def test_add_assembly_layers(client: AsyncClient, assemblies, project_epds
     assembly = assemblies[0]
     mutation = f"""
         mutation {{
-            addAssemblyLayers(
+            addProjectAssemblyLayers(
                 id: "{assembly.id}"
                 layers: [{', '.join([f'{{epdId: "{epd.id}", conversionFactor: 3, name: "Layer: {epd.name}"}}' for epd in project_epds])}]
             ) {{
@@ -30,19 +30,19 @@ async def test_add_assembly_layers(client: AsyncClient, assemblies, project_epds
     data = response.json()
 
     assert not data.get("errors")
-    assert len(data["data"]["addAssemblyLayers"]) == 3
-    assert data["data"]["addAssemblyLayers"][0] == {
+    assert len(data["data"]["addProjectAssemblyLayers"]) == 3
+    assert data["data"]["addProjectAssemblyLayers"][0] == {
         "name": "Layer: EPD 0",
         "conversionFactor": 3.0,
     }
 
 
 @pytest.mark.asyncio
-async def test_update_assembly_layers(client: AsyncClient, assembly_with_layers, project_epds):
+async def test_update_project_assembly_layers(client: AsyncClient, assembly_with_layers, project_epds):
     assembly = assembly_with_layers
     mutation = f"""
         mutation {{
-            updateAssemblyLayers(
+            updateProjectAssemblyLayers(
                 id: "{assembly.id}"
                 layers: [{', '.join([
         f'{{id: "{layer.id}", epdId: "{layer.epd.id}", conversionFactor: 5, name: "{layer.epd.name}"}}' for layer in assembly.layers
@@ -61,17 +61,17 @@ async def test_update_assembly_layers(client: AsyncClient, assembly_with_layers,
     data = response.json()
 
     assert not data.get("errors")
-    assert sorted(data["data"]["updateAssemblyLayers"], key=lambda x: x.get("name")) == [
+    assert sorted(data["data"]["updateProjectAssemblyLayers"], key=lambda x: x.get("name")) == [
         {"name": epd.name, "conversionFactor": 5.0, "epdId": epd.id} for epd in project_epds
     ]
 
 
 @pytest.mark.asyncio
-async def test_delete_assembly_layers(client: AsyncClient, assembly_with_layers, project_epds, db):
+async def test_delete_project_assembly_layers(client: AsyncClient, assembly_with_layers, project_epds, db):
     assembly = assembly_with_layers
     mutation = """
-        mutation DeleteLayer($id: String!, $layerId: String!) {
-            deleteAssemblyLayers(
+        mutation deleteLayer($id: String!, $layerId: String!) {
+            deleteProjectAssemblyLayers(
                 id: $id
                 layers: [{id: $layerId} ]
             )
@@ -92,19 +92,19 @@ async def test_delete_assembly_layers(client: AsyncClient, assembly_with_layers,
     assert not data.get("errors")
 
     async with AsyncSession(db) as session:
-        query = select(Assembly).where(Assembly.id == assembly.id).options(selectinload(Assembly.layers))
+        query = select(ProjectAssembly).where(ProjectAssembly.id == assembly.id).options(selectinload(ProjectAssembly.layers))
         assembly = (await session.exec(query)).one()
 
     assert len(assembly.layers) == len(project_epds) - 1
 
 
 @pytest.mark.asyncio
-async def test_add_assembly_layers_with_transport(client: AsyncClient, assemblies, project_epds):
+async def test_add_project_assembly_layers_with_transport(client: AsyncClient, assemblies, project_epds):
     assembly = assemblies[0]
     transport_type = TransportType("plane").name
     mutation = f"""
         mutation {{
-            addAssemblyLayers(
+            addProjectAssemblyLayers(
                 id: "{assembly.id}"
                 layers: [{', '.join([f'{{epdId: "{epd.id}", conversionFactor: 3, name: "Layer: {epd.name}", transportType: {transport_type}, transportDistance: 30, transportUnit: "km" }}' for epd in project_epds])}]
             ) {{
@@ -123,8 +123,8 @@ async def test_add_assembly_layers_with_transport(client: AsyncClient, assemblie
     data = response.json()
 
     assert not data.get("errors")
-    assert len(data["data"]["addAssemblyLayers"]) == 3
-    assert data["data"]["addAssemblyLayers"][0] == {
+    assert len(data["data"]["addProjectAssemblyLayers"]) == 3
+    assert data["data"]["addProjectAssemblyLayers"][0] == {
         "name": "Layer: EPD 0",
         "conversionFactor": 3.0,
         "transportDistance": 30.0,

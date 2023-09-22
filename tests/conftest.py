@@ -65,6 +65,7 @@ def mock_azure_scheme(mocker):
         openid_config = ConfigClass()
         # fake user object fields
         claims = {"oid": "someid"}
+        access_token = f"Bearer eydlhjaflkjadh"
         roles = ["lca_super_admin"]
 
     mocker.patch.object(
@@ -100,3 +101,9 @@ async def client(app: FastAPI) -> Iterator[AsyncClient]:
 @pytest.fixture
 def project_id() -> str:
     yield string_uuid()
+
+
+@pytest.fixture
+def project_exists_mock(mocker):
+    mocker.patch("lcacollect_config.validate.project_exists", return_value=True)
+
