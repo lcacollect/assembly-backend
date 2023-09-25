@@ -10,7 +10,7 @@ from models.epd import EPD
 
 
 @pytest.fixture
-async def assemblies(db, project_id):
+async def project_assemblies(db, project_id):
     assemblies = []
     async with AsyncSession(db) as session:
         for i in range(3):

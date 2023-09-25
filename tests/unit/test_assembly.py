@@ -5,7 +5,7 @@ from schema import schema
 
 
 @pytest.mark.asyncio
-async def test_get_project_assemblies(assemblies, db, project_id):
+async def test_get_project_assemblies(project_assemblies, db, project_id):
     query = f"""
         query {{
             projectAssemblies(projectId: "{project_id}") {{
@@ -41,12 +41,25 @@ async def test_create_project_assemblies(db, project_exists_mock):
 
     class MockUser:
         access_token = f"Bearer eydlhjaflkjadh"
+
     user = MockUser()
 
     async with AsyncSession(db) as session:
-        response = await schema.execute(mutation, context_value={"session": session, "user": user}, variable_values={
-            "assemblies": [{"name": "My Assembly", "category": "New Category", "projectId": "TESTID", "description": "this is an assembly", "unit": "m2"}]
-        })
+        response = await schema.execute(
+            mutation,
+            context_value={"session": session, "user": user},
+            variable_values={
+                "assemblies": [
+                    {
+                        "name": "My Assembly",
+                        "category": "New Category",
+                        "projectId": "TESTID",
+                        "description": "this is an assembly",
+                        "unit": "m2",
+                    }
+                ]
+            },
+        )
 
     assert response.errors is None
     assert response.data["addProjectAssemblies"][0] == {

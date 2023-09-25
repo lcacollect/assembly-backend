@@ -106,4 +106,3 @@ def project_id() -> str:
 @pytest.fixture
 def project_exists_mock(mocker):
     mocker.patch("lcacollect_config.validate.project_exists", return_value=True)
-

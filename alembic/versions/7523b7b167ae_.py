@@ -5,14 +5,14 @@ Revises: feae615aff79
 Create Date: 2023-09-22 12:52:32.793106
 
 """
-from alembic import op
 import sqlalchemy as sa
 import sqlmodel
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '7523b7b167ae'
-down_revision = 'feae615aff79'
+revision = "7523b7b167ae"
+down_revision = "feae615aff79"
 branch_labels = None
 depends_on = None
 
@@ -23,7 +23,7 @@ def upgrade():
     op.execute("ALTER INDEX assembly_pkey RENAME TO projectassembly_pkey")
     op.execute("ALTER INDEX assembly_id_unique RENAME TO projectassembly_id_unique")
     op.execute("ALTER INDEX ix_assembly_name RENAME TO ix_projectassembly_name")
-    op.alter_column('projectassembly', 'project_id', existing_type=sa.VARCHAR(), nullable=False)
+    op.alter_column("projectassembly", "project_id", existing_type=sa.VARCHAR(), nullable=False)
 
     op.rename_table("assemblyepdlink", "projectassemblyepdlink")
     op.execute("ALTER INDEX assemblyepdlink_pkey RENAME TO projectassemblyepdlink_pkey")

@@ -6,14 +6,14 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from graphql_types.assembly_layer import AssemblyLayerInput
-from models.assembly import ProjectAssembly
+from models.assembly import Assembly, ProjectAssembly
 from models.epd import EPD, ProjectEPD
-from models.links import ProjectAssemblyEPDLink
+from models.links import AssemblyEPDLink, ProjectAssemblyEPDLink
 from schema.assembly_layer import add_layer_to_assembly
 
 
 @pytest.fixture
-async def assemblies(db, project_id) -> list[ProjectAssembly]:
+async def project_assemblies(db, project_id) -> list[ProjectAssembly]:
     assemblies = []
     async with AsyncSession(db) as session:
         for i in range(3):
@@ -22,6 +22,24 @@ async def assemblies(db, project_id) -> list[ProjectAssembly]:
                 category="My Category",
                 meta_fields={},
                 project_id=project_id,
+            )
+            session.add(assembly)
+            assemblies.append(assembly)
+        await session.commit()
+        [await session.refresh(assembly) for assembly in assemblies]
+
+    yield assemblies
+
+
+@pytest.fixture
+async def assemblies(db, project_id) -> list[Assembly]:
+    assemblies = []
+    async with AsyncSession(db) as session:
+        for i in range(3):
+            assembly = Assembly(
+                name=f"Assembly {i}",
+                category="My Category",
+                meta_fields={},
             )
             session.add(assembly)
             assemblies.append(assembly)
@@ -96,8 +114,8 @@ async def project_epds(db, epds, project_id) -> list[ProjectEPD]:
 
 
 @pytest.fixture
-async def assembly_with_layers(db, assemblies, project_epds) -> ProjectAssembly:
-    assembly = assemblies[0]
+async def project_assembly_with_layers(db, project_assemblies, project_epds) -> ProjectAssembly:
+    assembly = project_assemblies[0]
     async with AsyncSession(db) as session:
         for epd in project_epds:
             await add_layer_to_assembly(
@@ -110,6 +128,27 @@ async def assembly_with_layers(db, assemblies, project_epds) -> ProjectAssembly:
             await session.refresh(assembly)
         query = select(ProjectAssembly).where(ProjectAssembly.id == assembly.id)
         query = query.options(selectinload(ProjectAssembly.layers).options(selectinload(ProjectAssemblyEPDLink.epd)))
+
+        assembly = (await session.exec(query)).first()
+
+    yield assembly
+
+
+@pytest.fixture
+async def assembly_with_layers(db, assemblies, epds) -> Assembly:
+    assembly = assemblies[0]
+    async with AsyncSession(db) as session:
+        for epd in epds:
+            await add_layer_to_assembly(
+                AssemblyLayerInput(epd_id=epd.id, name="", conversion_factor=1),
+                assembly,
+                session,
+            )
+
+            await session.commit()
+            await session.refresh(assembly)
+        query = select(Assembly).where(Assembly.id == assembly.id)
+        query = query.options(selectinload(Assembly.layers).options(selectinload(AssemblyEPDLink.epd)))
 
         assembly = (await session.exec(query)).first()
 

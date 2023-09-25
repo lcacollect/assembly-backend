@@ -1,6 +1,9 @@
 from enum import Enum
+
 import strawberry
+from pydantic import BaseModel
 from strawberry.scalars import JSON
+
 from .assembly_layer import GraphQLAssemblyLayer
 
 
@@ -13,17 +16,56 @@ class GraphQLAssemblyUnit(Enum):
     pcs = "Pcs"
 
 
+class BaseAssembly(BaseModel):
+    id: str
+    name: str
+    category: str
+    life_time: float
+    conversion_factor: float
+    description: str | None
+
+
+def calculate_impact_category(impact_category: str, layers, phases: list[str] | None = None) -> float:
+    """Calculate the impact category of the assembly based on the underlying layers."""
+
+    return sum(
+        [calculate_indicator(getattr(layer.epd, impact_category), phases) * layer.conversion_factor for layer in layers]
+    )
+
+
+@strawberry.type
+class GraphQLAssembly:
+    id: str
+    name: str
+    category: str
+    life_time: float
+    conversion_factor: float
+    description: str | None
+    meta_fields: JSON | None
+    unit: GraphQLAssemblyUnit
+
+    layers: list[GraphQLAssemblyLayer | None]
+
+    @strawberry.field
+    def gwp(self, phases: list[str] | None = None) -> float:
+        """Calculate the gwp of the assembly based on the underlying layers."""
+
+        if self.layers:
+            return calculate_impact_category("gwp", self.layers, phases)
+        return 0
+
+
 @strawberry.type
 class GraphQLProjectAssembly:
     id: str
     name: str
-    project_id: str
     category: str
     life_time: float
-    meta_fields: JSON | None
-    unit: GraphQLAssemblyUnit
     conversion_factor: float
     description: str | None
+    project_id: str
+    meta_fields: JSON | None
+    unit: GraphQLAssemblyUnit
 
     layers: list[GraphQLAssemblyLayer]
 
@@ -32,31 +74,49 @@ class GraphQLProjectAssembly:
         """Calculate the gwp of the assembly based on the underlying layers."""
 
         if self.layers:
-            return sum([calculate_indicator(layer.epd.gwp, phases) * layer.conversion_factor for layer in self.layers])
+            return calculate_impact_category("gwp", self.layers, phases)
         return 0
 
 
-@strawberry.input
-class ProjectAssemblyUpdateInput:
+class BaseAssemblyUpdateInput(BaseModel):
     id: str
     name: str | None = None
     category: str | None = None
     description: str | None = None
     life_time: float | None = None
-    meta_fields: JSON | None = None
     conversion_factor: float | None = None
+
+
+@strawberry.experimental.pydantic.input(model=BaseAssemblyUpdateInput, all_fields=True)
+class ProjectAssemblyUpdateInput:
+    meta_fields: JSON | None = None
     unit: GraphQLAssemblyUnit | None = None
 
 
-@strawberry.input
-class ProjectAssemblyAddInput:
+@strawberry.experimental.pydantic.input(model=BaseAssemblyUpdateInput, all_fields=True)
+class AssemblyUpdateInput:
+    meta_fields: JSON | None = None
+    unit: GraphQLAssemblyUnit | None = None
+
+
+class BaseAssemblyAddInput(BaseModel):
     name: str
     category: str
-    project_id: str
     description: str | None = None
     life_time: float | None = 50.0
-    meta_fields: JSON | None = None
     conversion_factor: float | None = 1.0
+
+
+@strawberry.experimental.pydantic.input(model=BaseAssemblyAddInput, all_fields=True)
+class ProjectAssemblyAddInput:
+    project_id: str
+    meta_fields: JSON | None = None
+    unit: GraphQLAssemblyUnit
+
+
+@strawberry.experimental.pydantic.input(model=BaseAssemblyAddInput, all_fields=True)
+class AssemblyAddInput:
+    meta_fields: JSON | None = None
     unit: GraphQLAssemblyUnit
 
 

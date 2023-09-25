@@ -5,8 +5,14 @@ schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "
   mutation: Mutation
 }
 
-input AssemblyLayerDeleteInput {
-  id: String!
+input AssemblyAddInput {
+  metaFields: JSON = null
+  unit: GraphQLAssemblyUnit!
+  name: String!
+  category: String!
+  description: String = null
+  lifeTime: Float = 50
+  conversionFactor: Float = 1
 }
 
 input AssemblyLayerInput {
@@ -31,6 +37,17 @@ input AssemblyLayerUpdateInput {
   transportType: TransportType
   transportDistance: Float
   transportUnit: String
+}
+
+input AssemblyUpdateInput {
+  metaFields: JSON = null
+  unit: GraphQLAssemblyUnit = null
+  id: String!
+  name: String = null
+  category: String = null
+  description: String = null
+  lifeTime: Float = null
+  conversionFactor: Float = null
 }
 
 """Date (isoformat)"""
@@ -89,6 +106,19 @@ input GraphQLAddEpdInput {
   pere: JSON = null
   metaFields: JSON = null
   conversions: JSON = null
+}
+
+type GraphQLAssembly {
+  id: String!
+  name: String!
+  category: String!
+  lifeTime: Float!
+  conversionFactor: Float!
+  description: String
+  metaFields: JSON
+  unit: GraphQLAssemblyUnit!
+  layers: [GraphQLAssemblyLayer]!
+  gwp(phases: [String!] = null): Float!
 }
 
 type GraphQLAssemblyLayer {
@@ -194,13 +224,13 @@ type GraphQLImpactCategories {
 type GraphQLProjectAssembly {
   id: String!
   name: String!
-  projectId: String!
   category: String!
   lifeTime: Float!
-  metaFields: JSON
-  unit: GraphQLAssemblyUnit!
   conversionFactor: Float!
   description: String
+  projectId: String!
+  metaFields: JSON
+  unit: GraphQLAssemblyUnit!
   layers: [GraphQLAssemblyLayer!]!
   gwp(phases: [String!] = null): Float!
 }
@@ -265,12 +295,41 @@ type Mutation {
 
   """Delete a global EPD"""
   deleteEpds(ids: [String!]!): [String!]!
+
+  """Add Project Assemblies"""
   addProjectAssemblies(assemblies: [ProjectAssemblyAddInput!]!): [GraphQLProjectAssembly!]!
-  deleteProjectAssemblies(ids: [String!]!): [String!]!
+
+  """Add Project Assemblies from Assemblies"""
+  addProjectAssembliesFromAssemblies(assemblies: [ID!]!, projectId: ID!): [GraphQLProjectAssembly!]!
+
+  """Update Project Assemblies"""
   updateProjectAssemblies(assemblies: [ProjectAssemblyUpdateInput!]!): [GraphQLProjectAssembly!]!
-  addProjectAssemblyLayers(id: String!, layers: [AssemblyLayerInput!]!): [GraphQLAssemblyLayer!]!
-  deleteProjectAssemblyLayers(id: String!, layers: [AssemblyLayerDeleteInput!]!): [String!]!
-  updateProjectAssemblyLayers(id: String!, layers: [AssemblyLayerUpdateInput!]!): [GraphQLAssemblyLayer!]!
+
+  """Delete Project Assemblies"""
+  deleteProjectAssemblies(ids: [ID!]!): [ID!]!
+
+  """Add layers to an Assembly"""
+  addProjectAssemblyLayers(id: ID!, layers: [AssemblyLayerInput!]!): [GraphQLAssemblyLayer!]!
+
+  """Delete layers from an Assembly"""
+  deleteProjectAssemblyLayers(id: ID!, layers: [ID!]!): [String!]!
+  updateProjectAssemblyLayers(id: ID!, layers: [AssemblyLayerUpdateInput!]!): [GraphQLAssemblyLayer!]!
+
+  """Add Assemblies"""
+  addAssemblies(assemblies: [AssemblyAddInput!]!): [GraphQLAssembly!]!
+
+  """Update Assemblies"""
+  updateAssemblies(assemblies: [AssemblyUpdateInput!]!): [GraphQLAssembly!]!
+
+  """Delete Assemblies"""
+  deleteAssemblies(ids: [ID!]!): [ID!]!
+
+  """Add layers to an Assembly"""
+  addAssemblyLayers(id: ID!, layers: [AssemblyLayerInput!]!): [GraphQLAssemblyLayer!]!
+
+  """Delete layers from an Assembly"""
+  deleteAssemblyLayers(id: ID!, layers: [ID!]!): [String!]!
+  updateAssemblyLayers(id: ID!, layers: [AssemblyLayerUpdateInput!]!): [GraphQLAssemblyLayer!]!
 }
 
 type PageInfo {
@@ -281,25 +340,25 @@ type PageInfo {
 }
 
 input ProjectAssemblyAddInput {
+  projectId: String!
+  metaFields: JSON = null
+  unit: GraphQLAssemblyUnit!
   name: String!
   category: String!
-  projectId: String!
   description: String = null
   lifeTime: Float = 50
-  metaFields: JSON = null
   conversionFactor: Float = 1
-  unit: GraphQLAssemblyUnit!
 }
 
 input ProjectAssemblyUpdateInput {
+  metaFields: JSON = null
+  unit: GraphQLAssemblyUnit = null
   id: String!
   name: String = null
   category: String = null
   description: String = null
   lifeTime: Float = null
-  metaFields: JSON = null
   conversionFactor: Float = null
-  unit: GraphQLAssemblyUnit = null
 }
 
 input ProjectEPDFilters {
@@ -317,6 +376,11 @@ input ProjectEPDFilters {
 type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
+
+  """Get assemblies"""
+  assemblies: [GraphQLAssembly!]!
+
+  """Get project assemblies"""
   projectAssemblies(projectId: String!): [GraphQLProjectAssembly!]!
   epds(filters: EPDFilters = null, sortBy: EPDSort = null, count: Int! = 50, after: String): GraphQLEPDConnection!
   projectEpds(projectId: String!, filters: ProjectEPDFilters = null): [GraphQLProjectEPD!]!
