@@ -59,7 +59,7 @@ class ProjectAssembly(AssemblyBase, table=True):
 
     @classmethod
     def create_from_assembly(cls, assembly: Assembly, project_id: str):
-        org_data = assembly.dict(exclude={"id", "origin_id", "layers"})
+        org_data = assembly.dict(exclude={"id", "origin_id", "layers", "source"})
         project_assembly = cls(**org_data, project_id=project_id, origin=assembly, origin_id=assembly.id)
 
         return project_assembly

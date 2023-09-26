@@ -36,11 +36,7 @@ async def assemblies(db, project_id) -> list[Assembly]:
     assemblies = []
     async with AsyncSession(db) as session:
         for i in range(3):
-            assembly = Assembly(
-                name=f"Assembly {i}",
-                category="My Category",
-                meta_fields={},
-            )
+            assembly = Assembly(name=f"Assembly {i}", category="My Category", meta_fields={}, source="")
             session.add(assembly)
             assemblies.append(assembly)
         await session.commit()

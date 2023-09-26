@@ -35,7 +35,9 @@ async def assemblies_query(info: Info, filters: AssemblyFilters | None = None) -
     return await _query_assemblies(info, None, filters, Assembly, "assemblies")
 
 
-async def project_assemblies_query(info: Info, project_id: str, filters: AssemblyFilters | None = None) -> list["GraphQLProjectAssembly"]:
+async def project_assemblies_query(
+    info: Info, project_id: str, filters: AssemblyFilters | None = None
+) -> list["GraphQLProjectAssembly"]:
     """Get project assemblies"""
 
     return await _query_assemblies(info, project_id, filters, ProjectAssembly, "projectAssemblies")
@@ -107,7 +109,7 @@ async def _mutation_add_assemblies(
             await authenticate_project(info, assembly_input.project_id)
             data["project_id"] = assembly_input.project_id
         elif assembly_model == Assembly:
-            data["source"] = assembly_input.source,
+            data["source"] = assembly_input.source or ""
 
         assembly = assembly_model(**data)
 
