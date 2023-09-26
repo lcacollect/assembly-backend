@@ -24,6 +24,7 @@ def upgrade():
         sa.Column("meta_fields", postgresql.JSON(astext_type=sa.Text()), nullable=True),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("category", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("source", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("life_time", sa.Float(), nullable=False),
         sa.Column("unit", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("conversion_factor", sa.Float(), nullable=False),

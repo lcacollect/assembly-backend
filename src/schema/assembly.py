@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Annotated, Type
 import strawberry
 from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
-from sqlalchemy.exc import MissingGreenlet
+from lcacollect_config.graphql.input_filters import filter_model_query
 from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
 from strawberry import ID
@@ -14,6 +14,7 @@ from core.validate import authenticate_project
 from models.assembly import Assembly, ProjectAssembly
 from models.links import AssemblyEPDLink, ProjectAssemblyEPDLink
 from schema.assembly_layer import add_layers_to_project_assembly
+from schema.inputs import AssemblyFilters
 
 if TYPE_CHECKING:
     from graphql_types.assembly import (
@@ -28,21 +29,22 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-async def assemblies_query(info: Info) -> list["GraphQLAssembly"]:
+async def assemblies_query(info: Info, filters: AssemblyFilters | None = None) -> list["GraphQLAssembly"]:
     """Get assemblies"""
 
-    return await _query_assemblies(info, None, Assembly, "assemblies")
+    return await _query_assemblies(info, None, filters, Assembly, "assemblies")
 
 
-async def project_assemblies_query(info: Info, project_id: str) -> list["GraphQLProjectAssembly"]:
+async def project_assemblies_query(info: Info, project_id: str, filters: AssemblyFilters | None = None) -> list["GraphQLProjectAssembly"]:
     """Get project assemblies"""
 
-    return await _query_assemblies(info, project_id, ProjectAssembly, "projectAssemblies")
+    return await _query_assemblies(info, project_id, filters, ProjectAssembly, "projectAssemblies")
 
 
 async def _query_assemblies(
     info: Info,
     project_id: str | None,
+    filters: AssemblyFilters | None,
     assembly_model: Type[Assembly | ProjectAssembly],
     _field: str,
 ) -> list["GraphQLProjectAssembly"] | list["GraphQLAssembly"]:
@@ -58,6 +60,8 @@ async def _query_assemblies(
 
     category_field = [field for field in info.selected_fields if field.name == _field]
     query = await assembly_query_options(query, category_field, assembly_model, link_model)
+    if filters:
+        query = filter_model_query(assembly_model, filters, query=query)
 
     return (await session.exec(query)).all()
 
@@ -102,6 +106,8 @@ async def _mutation_add_assemblies(
         if assembly_model == ProjectAssembly:
             await authenticate_project(info, assembly_input.project_id)
             data["project_id"] = assembly_input.project_id
+        elif assembly_model == Assembly:
+            data["source"] = assembly_input.source,
 
         assembly = assembly_model(**data)
 
@@ -128,7 +134,6 @@ async def add_project_assemblies_from_assemblies_mutation(
     info: Info, assemblies: list[ID], project_id: ID
 ) -> list["GraphQLProjectAssembly"]:
     """Add Project Assemblies from Assemblies"""
-    from graphql_types.assembly import GraphQLProjectAssembly
 
     session = get_session(info)
     _assemblies = []
@@ -203,6 +208,8 @@ async def _mutation_update_assemblies(
             "conversion_factor": assembly_input.conversion_factor,
             "unit": assembly_input.unit.value if assembly_input.unit else None,
         }
+        if assembly_model == Assembly:
+            kwargs["source"] = assembly_input.source
         for key, value in kwargs.items():
             if value:
                 setattr(assembly, key, value)

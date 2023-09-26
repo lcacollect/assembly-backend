@@ -6,6 +6,7 @@ schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "
 }
 
 input AssemblyAddInput {
+  source: String = null
   metaFields: JSON = null
   unit: GraphQLAssemblyUnit!
   name: String!
@@ -13,6 +14,15 @@ input AssemblyAddInput {
   description: String = null
   lifeTime: Float = 50
   conversionFactor: Float = 1
+}
+
+input AssemblyFilters {
+  id: FilterOptions = null
+  name: FilterOptions = null
+  category: FilterOptions = null
+  lifeTime: FilterOptions = null
+  description: FilterOptions = null
+  source: FilterOptions = null
 }
 
 input AssemblyLayerInput {
@@ -40,6 +50,7 @@ input AssemblyLayerUpdateInput {
 }
 
 input AssemblyUpdateInput {
+  source: String = null
   metaFields: JSON = null
   unit: GraphQLAssemblyUnit = null
   id: String!
@@ -112,6 +123,7 @@ type GraphQLAssembly {
   id: String!
   name: String!
   category: String!
+  source: String!
   lifeTime: Float!
   conversionFactor: Float!
   description: String
@@ -378,10 +390,10 @@ type Query {
   _service: _Service!
 
   """Get assemblies"""
-  assemblies: [GraphQLAssembly!]!
+  assemblies(filters: AssemblyFilters = null): [GraphQLAssembly!]!
 
   """Get project assemblies"""
-  projectAssemblies(projectId: String!): [GraphQLProjectAssembly!]!
+  projectAssemblies(projectId: String!, filters: AssemblyFilters = null): [GraphQLProjectAssembly!]!
   epds(filters: EPDFilters = null, sortBy: EPDSort = null, count: Int! = 50, after: String): GraphQLEPDConnection!
   projectEpds(projectId: String!, filters: ProjectEPDFilters = null): [GraphQLProjectEPD!]!
 }

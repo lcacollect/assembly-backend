@@ -38,6 +38,7 @@ class GraphQLAssembly:
     id: str
     name: str
     category: str
+    source: str
     life_time: float
     conversion_factor: float
     description: str | None
@@ -95,6 +96,7 @@ class ProjectAssemblyUpdateInput:
 
 @strawberry.experimental.pydantic.input(model=BaseAssemblyUpdateInput, all_fields=True)
 class AssemblyUpdateInput:
+    source: str | None = None
     meta_fields: JSON | None = None
     unit: GraphQLAssemblyUnit | None = None
 
@@ -116,6 +118,7 @@ class ProjectAssemblyAddInput:
 
 @strawberry.experimental.pydantic.input(model=BaseAssemblyAddInput, all_fields=True)
 class AssemblyAddInput:
+    source: str | None = None
     meta_fields: JSON | None = None
     unit: GraphQLAssemblyUnit
 

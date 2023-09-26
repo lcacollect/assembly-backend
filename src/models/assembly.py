@@ -31,6 +31,7 @@ class AssemblyBase(SQLModel):
 
 class Assembly(AssemblyBase, table=True):
     id: Optional[str] = Field(default_factory=string_uuid, primary_key=True)
+    source: str
 
     # Relationships
     project_assemblies: list["ProjectAssembly"] = Relationship(back_populates="origin")
