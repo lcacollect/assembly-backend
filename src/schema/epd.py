@@ -2,7 +2,7 @@ import base64
 import logging
 from datetime import date
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING, Annotated, Optional
 
 import strawberry
 from lcacollect_config.context import get_session
@@ -17,11 +17,13 @@ from strawberry.scalars import JSON
 from strawberry.types import Info
 
 import models.epd as models_epd
-import schema.assembly as schema_assembly
 from schema.directives import Keys
 from schema.inputs import EPDFilters, EPDSort, ProjectEPDFilters
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from graphql_types.assembly import GraphQLProjectAssembly
 
 
 async def epds_query(
@@ -105,6 +107,12 @@ async def project_epds_query(
 async def add_project_epds_mutation(info: Info, project_id: str, epd_ids: list[str]) -> list["GraphQLProjectEPD"]:
     """Add Global EPDs to a project."""
     session = get_session(info)
+
+    return await _mutation_add_project_epds_from_epds(session, epd_ids, project_id)
+
+
+async def _mutation_add_project_epds_from_epds(session, epd_ids, project_id):
+    """Abstracted function for adding project epds from epds."""
 
     project_epds = []
     for origin_id in epd_ids:
@@ -340,5 +348,5 @@ class GraphQLEPD(GraphQLEPDBase):
 class GraphQLProjectEPD(GraphQLEPDBase):
     origin_id: str
 
-    assemblies: list["schema_assembly.GraphQLAssembly"] | None
+    assemblies: list[Annotated["GraphQLProjectAssembly", strawberry.lazy("graphql_types.assembly")]] | None
     project_id: strawberry.ID = strawberry.federation.field(shareable=True)

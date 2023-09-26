@@ -4,19 +4,19 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.config import settings
-from models.assembly import Assembly
+from models.assembly import ProjectAssembly
 
 
 @pytest.mark.asyncio
-async def test_get_assemblies(client: AsyncClient, assemblies):
-    query = """
-        query {
-            assemblies {
+async def test_get_project_assemblies(client: AsyncClient, project_assemblies, project_id):
+    query = f"""
+        query {{
+            projectAssemblies(projectId: "{project_id}") {{
                 name
                 category
                 lifeTime
-            }
-        }
+            }}
+        }}
     """
 
     response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, "variables": None})
@@ -25,23 +25,23 @@ async def test_get_assemblies(client: AsyncClient, assemblies):
     data = response.json()
 
     assert not data.get("errors")
-    assert data["data"]["assemblies"] == [
+    assert data["data"]["projectAssemblies"] == [
         {"name": f"Assembly {i}", "category": "My Category", "lifeTime": 50.0} for i in range(3)
     ]
 
 
 @pytest.mark.asyncio
-async def test_get_assemblies_with_layers(client: AsyncClient, assembly_with_layers, project_id):
-    query = """
-        query {
-            assemblies {
+async def test_get_project_assemblies_with_layers(client: AsyncClient, project_assembly_with_layers, project_id):
+    query = f"""
+        query {{
+            projectAssemblies(projectId: "{project_id}") {{
                 name
                 gwp
-                layers {
+                layers {{
                     name
-                }
-            }
-        }
+                }}
+            }}
+        }}
     """
 
     response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, "variables": None})
@@ -50,7 +50,7 @@ async def test_get_assemblies_with_layers(client: AsyncClient, assembly_with_lay
     data = response.json()
 
     assert not data.get("errors")
-    assert data["data"]["assemblies"][0] == {
+    assert data["data"]["projectAssemblies"][0] == {
         "name": f"Assembly {0}",
         "gwp": 30,
         "layers": [{"name": ""} for _ in range(3)],
@@ -58,10 +58,10 @@ async def test_get_assemblies_with_layers(client: AsyncClient, assembly_with_lay
 
 
 @pytest.mark.asyncio
-async def test_create_assemblies(client: AsyncClient, project_exists_mock):
+async def test_create_project_assemblies(client: AsyncClient, project_exists_mock):
     mutation = """
-        mutation ($assemblies: [AssemblyAddInput!]!) {
-            addAssemblies(assemblies: $assemblies) {
+        mutation ($assemblies: [ProjectAssemblyAddInput!]!) {
+            addProjectAssemblies(assemblies: $assemblies) {
                 name
                 category
                 lifeTime
@@ -79,6 +79,7 @@ async def test_create_assemblies(client: AsyncClient, project_exists_mock):
                         "name": "My Assembly",
                         "category": "New Category",
                         "lifeTime": 45,
+                        "projectId": "TESTID",
                         "description": "this is an assembly",
                         "unit": "m2",
                     }
@@ -91,7 +92,7 @@ async def test_create_assemblies(client: AsyncClient, project_exists_mock):
     data = response.json()
 
     assert not data.get("errors")
-    assert data["data"]["addAssemblies"][0] == {
+    assert data["data"]["addProjectAssemblies"][0] == {
         "name": f"My Assembly",
         "category": "New Category",
         "lifeTime": 45,
@@ -99,11 +100,50 @@ async def test_create_assemblies(client: AsyncClient, project_exists_mock):
 
 
 @pytest.mark.asyncio
-async def test_update_assemblies(client: AsyncClient, assemblies, project_exists_mock):
-    assembly = assemblies[0]
+async def test_create_project_assemblies_from_assembly(
+    client: AsyncClient, project_exists_mock, assembly_with_layers, project_id
+):
     mutation = """
-        mutation ($assemblies: [AssemblyUpdateInput!]!){
-            updateAssemblies(assemblies: $assemblies) {
+        mutation ($assemblies: [ID!]!, $projectId: ID!) {
+            addProjectAssembliesFromAssemblies(assemblies: $assemblies, projectId: $projectId) {
+                name
+                category
+                lifeTime
+                projectId
+                layers {
+                    name
+                }
+            }
+        }
+    """
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": mutation,
+            "variables": {"assemblies": [assembly_with_layers.id], "projectId": project_id},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    assert data["data"]["addProjectAssembliesFromAssemblies"][0] == {
+        "name": f"Assembly 0",
+        "category": "My Category",
+        "lifeTime": 50.0,
+        "projectId": project_id,
+        "layers": [{"name": ""}, {"name": ""}, {"name": ""}],
+    }
+
+
+@pytest.mark.asyncio
+async def test_update_project_assemblies(client: AsyncClient, project_assemblies, project_exists_mock):
+    assembly = project_assemblies[0]
+    mutation = """
+        mutation ($assemblies: [ProjectAssemblyUpdateInput!]!){
+            updateProjectAssemblies(assemblies: $assemblies) {
                 name
                 category
                 lifeTime
@@ -120,7 +160,7 @@ async def test_update_assemblies(client: AsyncClient, assemblies, project_exists
     data = response.json()
 
     assert not data.get("errors")
-    assert data["data"]["updateAssemblies"][0] == {
+    assert data["data"]["updateProjectAssemblies"][0] == {
         "name": assembly.name,
         "category": assembly.category,
         "lifeTime": 40,
@@ -128,11 +168,11 @@ async def test_update_assemblies(client: AsyncClient, assemblies, project_exists
 
 
 @pytest.mark.asyncio
-async def test_delete_assemblies(client: AsyncClient, assemblies, db, project_exists_mock):
-    assembly = assemblies[0]
+async def test_delete_project_assemblies(client: AsyncClient, project_assemblies, db, project_exists_mock):
+    assembly = project_assemblies[0]
     mutation = """
         mutation ($ids: [ID!]!){
-            deleteAssemblies(ids: $ids)
+            deleteProjectAssemblies(ids: $ids)
         }
     """
 
@@ -146,8 +186,8 @@ async def test_delete_assemblies(client: AsyncClient, assemblies, db, project_ex
     assert not data.get("errors")
 
     async with AsyncSession(db) as session:
-        query = select(Assembly)
+        query = select(ProjectAssembly)
         _assemblies = await session.exec(query)
         _assemblies = _assemblies.all()
 
-    assert len(_assemblies) == len(assemblies) - 1
+    assert len(_assemblies) == len(project_assemblies) - 1

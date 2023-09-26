@@ -42,3 +42,13 @@ class ProjectEPDFilters(BaseFilter):
     type: Optional[FilterOptions] = None
     region: Optional[FilterOptions] = None
     owner: Optional[FilterOptions] = None
+
+
+@strawberry.input
+class AssemblyFilters(BaseFilter):
+    id: Optional[FilterOptions] = None
+    name: Optional[FilterOptions] = None
+    category: Optional[FilterOptions] = None
+    life_time: Optional[FilterOptions] = None
+    description: Optional[FilterOptions] = None
+    source: Optional[FilterOptions] = None

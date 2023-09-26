@@ -11,23 +11,25 @@ import models.assembly as models_assembly
 import models.links as models_links
 from core.config import settings
 from core.exceptions import MicroServiceConnectionError, MicroServiceResponseError
-from schema.assembly import GraphQLAssembly
+from graphql_types.assembly import GraphQLProjectAssembly
 
 
-async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLAssembly | None:
+async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLProjectAssembly | None:
     """
     Fetches assembly of a schemaElement
     """
     if root.assembly_id:
         session = get_session(info)
 
-        query = select(models_assembly.Assembly).where(models_assembly.Assembly.id == root.assembly_id)
+        query = select(models_assembly.ProjectAssembly).where(models_assembly.ProjectAssembly.id == root.assembly_id)
         query = query.options(
-            selectinload(models_assembly.Assembly.layers).options(selectinload(models_links.AssemblyEPDLink.epd))
+            selectinload(models_assembly.ProjectAssembly.layers).options(
+                selectinload(models_links.ProjectAssemblyEPDLink.epd)
+            )
         )
         element = (await session.exec(query)).first()
         if element:
-            return GraphQLAssembly(
+            return GraphQLProjectAssembly(
                 id=element.id,
                 name=element.name,
                 project_id=element.project_id,
@@ -47,9 +49,9 @@ async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLAssem
 class GraphQLSchemaElement:
     id: strawberry.ID
     assembly_id: str | None = strawberry.federation.field(shareable=True)
-    assembly: Optional[Annotated["GraphQLAssembly", strawberry.lazy("schema.assembly")]] = strawberry.field(
-        resolver=get_assembly
-    )
+    assembly: Optional[
+        Annotated["GraphQLProjectAssembly", strawberry.lazy("graphql_types.assembly")]
+    ] = strawberry.field(resolver=get_assembly)
 
     @classmethod
     async def resolve_reference(cls, info: Info, id: strawberry.ID):

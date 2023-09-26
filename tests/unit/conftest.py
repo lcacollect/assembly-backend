@@ -5,16 +5,16 @@ from lcacollect_config.connection import create_postgres_engine
 from pytest_alembic.config import Config
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from models.assembly import Assembly
+from models.assembly import ProjectAssembly
 from models.epd import EPD
 
 
 @pytest.fixture
-async def assemblies(db, project_id):
+async def project_assemblies(db, project_id):
     assemblies = []
     async with AsyncSession(db) as session:
         for i in range(3):
-            assembly = Assembly(
+            assembly = ProjectAssembly(
                 name=f"Assembly {i}",
                 category="My Category",
                 meta_fields={},
