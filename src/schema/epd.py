@@ -151,7 +151,7 @@ async def add_epds_mutation(info: Info, epds: list["GraphQLAddEpdInput"]) -> lis
             id=epd_input.id if epd_input.id else string_uuid(),
             name=epd_input.name,
             version=epd_input.version,
-            declared_unit=epd_input.declared_unit,
+            declared_unit=epd_input.declared_unit.value.lower(),
             valid_until=epd_input.valid_until,
             published_date=epd_input.published_date,
             source=epd_input.source.get("name"),
