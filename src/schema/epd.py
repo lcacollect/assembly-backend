@@ -30,7 +30,7 @@ async def epds_query(
     info: Info,
     filters: Optional[EPDFilters] = None,
     sort_by: Optional[EPDSort] = None,
-    count: int = 50,
+    count: int | None = 50,
     after: Optional[Cursor] = UNSET,
 ) -> Connection["GraphQLEPD"]:
     """
@@ -52,7 +52,8 @@ async def epds_query(
     after = after if after is not UNSET else None
     if after:
         query = query.where(models_epd.EPD.id > after)
-    query = query.limit(count + 1)
+    if count:
+        query = query.limit(count + 1)
     if sort_by:
         query = sort_model_query(models_epd.EPD, sort_by, query=query)
     else:
@@ -63,7 +64,7 @@ async def epds_query(
 
     # Get the end cursor
     end_cursor = None
-    if len(edges) > count:
+    if not count or len(edges) > count:
         end_cursor = edges[-1].cursor
     elif len(edges) > 1:
         end_cursor = edges[-2].cursor
@@ -71,12 +72,12 @@ async def epds_query(
     return Connection(
         page_info=PageInfo(
             has_previous_page=False,
-            has_next_page=total_count > count,
+            has_next_page=False if not count else total_count > count,
             start_cursor=edges[0].cursor if edges else None,
             end_cursor=end_cursor,
         ),
         edges=edges[:-1]
-        if len(edges) > count
+        if count and len(edges) > count
         else edges,  # exclude last one as it was fetched to know if there is a next page
         num_edges=total_count,
     )

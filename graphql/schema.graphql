@@ -394,7 +394,7 @@ type Query {
 
   """Get project assemblies"""
   projectAssemblies(projectId: String!, filters: AssemblyFilters = null): [GraphQLProjectAssembly!]!
-  epds(filters: EPDFilters = null, sortBy: EPDSort = null, count: Int! = 50, after: String): GraphQLEPDConnection!
+  epds(filters: EPDFilters = null, sortBy: EPDSort = null, count: Int = 50, after: String): GraphQLEPDConnection!
   projectEpds(projectId: String!, filters: ProjectEPDFilters = null): [GraphQLProjectEPD!]!
 }
 
