@@ -52,8 +52,8 @@ async def test_get_assemblies_with_layers(client: AsyncClient, assembly_with_lay
     assert not data.get("errors")
     assert data["data"]["assemblies"][0] == {
         "name": f"Assembly {0}",
-        "gwp": 30,
-        "layers": [{"name": ""} for _ in range(3)],
+        "gwp": 10.0,
+        "layers": [{"name": ""} for _ in range(2)],
     }
 
 

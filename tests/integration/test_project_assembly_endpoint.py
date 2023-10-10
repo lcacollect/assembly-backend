@@ -112,6 +112,12 @@ async def test_create_project_assemblies_from_assembly(
                 projectId
                 layers {
                     name
+                    epd {
+                        name
+                    }
+                    transportEpd {
+                        name
+                    }
                 }
             }
         }
@@ -134,7 +140,10 @@ async def test_create_project_assemblies_from_assembly(
         "category": "My Category",
         "lifeTime": 50.0,
         "projectId": project_id,
-        "layers": [{"name": ""}, {"name": ""}, {"name": ""}],
+        "layers": [
+            {"name": "", "epd": {"name": "EPD 0"}, "transportEpd": {"name": "EPD 2"}},
+            {"name": "", "epd": {"name": "EPD 1"}, "transportEpd": {"name": "EPD 2"}},
+        ],
     }
 
 

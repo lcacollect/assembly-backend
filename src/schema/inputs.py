@@ -18,6 +18,7 @@ class EPDFilters(BaseFilter):
     type: Optional[FilterOptions] = None
     region: Optional[FilterOptions] = None
     owner: Optional[FilterOptions] = None
+    is_transport: Optional[FilterOptions] = None
 
 
 @strawberry.input
@@ -29,6 +30,7 @@ class EPDSort(BaseFilter):
     type: Optional[SortOptions] = None
     region: Optional[SortOptions] = None
     owner: Optional[SortOptions] = None
+    is_transport: Optional[SortOptions] = None
 
 
 @strawberry.input
@@ -42,6 +44,7 @@ class ProjectEPDFilters(BaseFilter):
     type: Optional[FilterOptions] = None
     region: Optional[FilterOptions] = None
     owner: Optional[FilterOptions] = None
+    is_transport: Optional[FilterOptions] = None
 
 
 @strawberry.input

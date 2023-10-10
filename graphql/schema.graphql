@@ -27,26 +27,26 @@ input AssemblyFilters {
 
 input AssemblyLayerInput {
   epdId: String!
-  id: String
-  name: String
-  conversionFactor: Float
-  referenceServiceLife: Int
-  description: String
-  transportType: TransportType
-  transportDistance: Float
-  transportUnit: String
+  id: String = null
+  name: String = null
+  conversionFactor: Float = null
+  referenceServiceLife: Int = null
+  description: String = null
+  transportEpdId: String = null
+  transportDistance: Float = null
+  transportConversionFactor: Float = 1
 }
 
 input AssemblyLayerUpdateInput {
   epdId: String!
   id: String!
-  name: String
-  conversionFactor: Float
-  referenceServiceLife: Int
-  description: String
-  transportType: TransportType
-  transportDistance: Float
-  transportUnit: String
+  name: String = null
+  conversionFactor: Float = null
+  referenceServiceLife: Int = null
+  description: String = null
+  transportEpdId: String = null
+  transportDistance: Float = null
+  transportConversionFactor: Float = null
 }
 
 input AssemblyUpdateInput {
@@ -73,6 +73,7 @@ input EPDFilters {
   type: FilterOptions = null
   region: FilterOptions = null
   owner: FilterOptions = null
+  isTransport: FilterOptions = null
 }
 
 input EPDSort {
@@ -83,6 +84,7 @@ input EPDSort {
   type: SortOptions = null
   region: SortOptions = null
   owner: SortOptions = null
+  isTransport: SortOptions = null
 }
 
 input FilterOptions {
@@ -93,6 +95,7 @@ input FilterOptions {
   isEmpty: Boolean = null
   isNotEmpty: Boolean = null
   isAnyOf: [String!] = null
+  isTrue: Boolean = null
   jsonContains: String = null
 }
 
@@ -115,7 +118,7 @@ input GraphQLAddEpdInput {
   pocp: JSON = null
   penre: JSON = null
   pere: JSON = null
-  metaFields: JSON = null
+  metaData: JSON = null
   conversions: JSON = null
 }
 
@@ -136,14 +139,14 @@ type GraphQLAssembly {
 type GraphQLAssemblyLayer {
   id: String
   epd: GraphQLProjectEPD!
+  epdId: String!
   name: String
   conversionFactor: Float
   referenceServiceLife: Int
   description: String
-  transportType: TransportType
+  transportEpd: GraphQLProjectEPD
   transportDistance: Float
-  transportUnit: String
-  epdId: String!
+  transportConversionFactor: Float!
 }
 
 enum GraphQLAssemblyUnit {
@@ -169,8 +172,10 @@ type GraphQLEPD {
   source: String!
   location: String!
   subtype: String!
+  isTransport: Boolean!
   referenceServiceLife: Int
   comment: String
+  metaFields: JSON
   conversions: [GraphQLConversion!]!
   gwp: GraphQLImpactCategories
   odp: GraphQLImpactCategories
@@ -192,8 +197,10 @@ type GraphQLEPDBase {
   source: String!
   location: String!
   subtype: String!
+  isTransport: Boolean!
   referenceServiceLife: Int
   comment: String
+  metaFields: JSON
   conversions: [GraphQLConversion!]!
   gwp: GraphQLImpactCategories
   odp: GraphQLImpactCategories
@@ -257,8 +264,10 @@ type GraphQLProjectEPD @keys(fields: "project_id") {
   source: String!
   location: String!
   subtype: String!
+  isTransport: Boolean!
   referenceServiceLife: Int
   comment: String
+  metaFields: JSON
   conversions: [GraphQLConversion!]!
   gwp: GraphQLImpactCategories
   odp: GraphQLImpactCategories
@@ -383,6 +392,7 @@ input ProjectEPDFilters {
   type: FilterOptions = null
   region: FilterOptions = null
   owner: FilterOptions = null
+  isTransport: FilterOptions = null
 }
 
 type Query {
@@ -401,13 +411,6 @@ type Query {
 enum SortOptions {
   ASC
   DSC
-}
-
-enum TransportType {
-  truck
-  train
-  ship
-  plane
 }
 
 scalar _Any

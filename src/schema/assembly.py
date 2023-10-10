@@ -267,6 +267,17 @@ async def assembly_query_options(
     assembly_model: Type[Assembly | ProjectAssembly],
     link_model: Type[AssemblyEPDLink | ProjectAssemblyEPDLink],
 ):
-    if category_field and [field for field in category_field[0].selections if field.name in ["layers", "gwp"]]:
-        return query.options(selectinload(assembly_model.layers).options(selectinload(link_model.epd)))
+    if category_field:
+        selections = [field for field in category_field[0].selections]
+        if any(field.name == "gwp" for field in selections):
+            query = query.options(selectinload(assembly_model.layers).options(selectinload(link_model.epd)))
+        if layer_fields := [field for field in selections if field.name == "layers"]:
+            layer_selections = [field for field in layer_fields[0].selections]
+            if any(field.name == "epd" for field in layer_selections):
+                query = query.options(selectinload(assembly_model.layers).options(selectinload(link_model.epd)))
+            if any(field.name == "transportEpd" for field in layer_selections):
+                query = query.options(
+                    selectinload(assembly_model.layers).options(selectinload(link_model.transport_epd))
+                )
+
     return query

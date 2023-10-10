@@ -35,6 +35,7 @@ async def load(path: Path):
                 comment=row.get("Sorterings ID"),
                 reference_service_life=None,
                 location="DK",
+                is_transport=False,
                 conversions=[
                     {"to": "KG", "value": float(row.get("Masse faktor")) * float(row.get("Deklareret faktor (FU)"))}
                 ],
