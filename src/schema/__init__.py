@@ -16,7 +16,7 @@ from graphql_types.assembly import GraphQLAssembly, GraphQLProjectAssembly
 @strawberry.type
 class Query:
     assemblies: list["GraphQLAssembly"] = strawberry.field(
-        permission_classes=[IsAdmin],
+        permission_classes=[IsAuthenticated],
         resolver=schema_assembly.assemblies_query,
         description=getdoc(schema_assembly.assemblies_query),
     )
