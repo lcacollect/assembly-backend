@@ -95,7 +95,7 @@ async def test_add_epds(client: AsyncClient, datafix_dir):
                         "pocp": epd["pocp"],
                         "penre": epd["penre"],
                         "pere": epd["pere"],
-                        "metaFields": epd.get("metaFields"),
+                        "metaData": epd.get("metaData"),
                         "conversions": epd["conversions"],
                     }
                     for epd in json.loads((datafix_dir / "epdx.json").read_text())

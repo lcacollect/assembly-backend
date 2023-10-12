@@ -38,7 +38,7 @@ async def epds_query(
     This query is paginated.
     """
 
-    session = info.context.get("session")
+    session = get_session(info)
 
     # Build EPD query
     query = select(models_epd.EPD)
@@ -61,6 +61,12 @@ async def epds_query(
 
     epds = (await session.exec(query)).all()
     edges = [Edge(node=epd, cursor=epd.id) for epd in epds]
+    if not edges:
+        return Connection(
+            page_info=PageInfo(has_previous_page=False, has_next_page=False, start_cursor=None, end_cursor=None),
+            edges=[],
+            num_edges=0,
+        )
 
     # Get the end cursor
     end_cursor = None
@@ -167,7 +173,8 @@ async def add_epds_mutation(info: Info, epds: list["GraphQLAddEpdInput"]) -> lis
             pocp=epd_input.pocp,
             penre=epd_input.penre,
             pere=epd_input.pere,
-            meta_fields=epd_input.meta_fields,
+            meta_fields=epd_input.meta_data,
+            is_transport=epd_input.meta_data.get("isTransport", False) if epd_input.meta_data else False,
             conversions=epd_input.conversions,
         )
         _epds.append(epd)
@@ -200,6 +207,7 @@ class GraphQLUnit(Enum):
     PCS = "PCS"
     L = "L"
     M2R1 = "M2R1"
+    TONES_KM = "TONES_KM"
     UNKNOWN = "UNKNOWN"
 
 
@@ -273,7 +281,7 @@ class GraphQLAddEpdInput:
     pocp: JSON | None = None
     penre: JSON | None = None
     pere: JSON | None = None
-    meta_fields: JSON | None = None
+    meta_data: JSON | None = None
     conversions: JSON | None = None
 
 
@@ -288,8 +296,10 @@ class GraphQLEPDBase:
     source: str
     location: str
     subtype: str
+    is_transport: bool = False
     reference_service_life: int | None
     comment: str | None
+    meta_fields: JSON | None
 
     @strawberry.field
     def conversions(self) -> list[GraphQLConversion]:

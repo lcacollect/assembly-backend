@@ -134,9 +134,9 @@ async def project_assembly_with_layers(db, project_assemblies, project_epds) -> 
 async def assembly_with_layers(db, assemblies, epds) -> Assembly:
     assembly = assemblies[0]
     async with AsyncSession(db) as session:
-        for epd in epds:
+        for epd in epds[:2]:
             await add_layer_to_assembly(
-                AssemblyLayerInput(epd_id=epd.id, name="", conversion_factor=1),
+                AssemblyLayerInput(epd_id=epd.id, name="", conversion_factor=1, transport_epd_id=epds[2].id),
                 assembly,
                 session,
             )

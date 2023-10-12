@@ -54,10 +54,10 @@ async def _query_assemblies(
 
     session = get_session(info)
 
-    query = select(ProjectAssembly).where(ProjectAssembly.project_id == project_id)
+    query = select(ProjectAssembly).where(ProjectAssembly.project_id == project_id).distinct(ProjectAssembly.id)
     link_model = ProjectAssemblyEPDLink
     if _field == "assemblies":
-        query = select(Assembly)
+        query = select(Assembly).distinct(Assembly.id)
         link_model = AssemblyEPDLink
 
     category_field = [field for field in info.selected_fields if field.name == _field]
@@ -155,7 +155,7 @@ async def add_project_assemblies_from_assemblies_mutation(
         _assemblies.append(project_assembly)
         logger.info(f"Adding project assembly with id: {project_assembly.id} from assembly with id: {assembly.id}")
 
-    await session.commit()
+        await session.commit()
 
     category_field = [field for field in info.selected_fields if field.name == "addProjectAssembliesFromAssemblies"]
     query = select(ProjectAssembly).where(col(ProjectAssembly.id).in_([assembly.id for assembly in _assemblies]))
@@ -267,6 +267,17 @@ async def assembly_query_options(
     assembly_model: Type[Assembly | ProjectAssembly],
     link_model: Type[AssemblyEPDLink | ProjectAssemblyEPDLink],
 ):
-    if category_field and [field for field in category_field[0].selections if field.name in ["layers", "gwp"]]:
-        return query.options(selectinload(assembly_model.layers).options(selectinload(link_model.epd)))
+    if category_field:
+        selections = [field for field in category_field[0].selections]
+        if any(field.name == "gwp" for field in selections):
+            query = query.options(selectinload(assembly_model.layers).options(selectinload(link_model.epd)))
+        if layer_fields := [field for field in selections if field.name == "layers"]:
+            layer_selections = [field for field in layer_fields[0].selections]
+            if any(field.name == "epd" for field in layer_selections):
+                query = query.options(selectinload(assembly_model.layers).options(selectinload(link_model.epd)))
+            if any(field.name == "transportEpd" for field in layer_selections):
+                query = query.options(
+                    selectinload(assembly_model.layers).options(selectinload(link_model.transport_epd))
+                )
+
     return query

@@ -19,7 +19,7 @@ async def test_get_project_assemblies(project_assemblies, db, project_id):
         response = await schema.execute(query, context_value={"session": session, "user": True})
 
     assert response.errors is None
-    assert response.data["projectAssemblies"] == [
+    assert sorted(response.data["projectAssemblies"], key=lambda x: x.get("name")) == [
         {
             "name": f"Assembly {i}",
             "category": "My Category",
