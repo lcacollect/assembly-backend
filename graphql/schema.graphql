@@ -296,6 +296,7 @@ enum GraphQLUnit {
   PCS
   L
   M2R1
+  TONES_KM
   UNKNOWN
 }
 

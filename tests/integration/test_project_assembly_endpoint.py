@@ -25,7 +25,8 @@ async def test_get_project_assemblies(client: AsyncClient, project_assemblies, p
     data = response.json()
 
     assert not data.get("errors")
-    assert data["data"]["projectAssemblies"] == [
+
+    assert sorted(data["data"]["projectAssemblies"], key=lambda x: x.get("name")) == [
         {"name": f"Assembly {i}", "category": "My Category", "lifeTime": 50.0} for i in range(3)
     ]
 
@@ -50,7 +51,7 @@ async def test_get_project_assemblies_with_layers(client: AsyncClient, project_a
     data = response.json()
 
     assert not data.get("errors")
-    assert data["data"]["projectAssemblies"][0] == {
+    assert sorted(data["data"]["projectAssemblies"], key=lambda x: x.get("name"))[0] == {
         "name": f"Assembly {0}",
         "gwp": 30,
         "layers": [{"name": ""} for _ in range(3)],

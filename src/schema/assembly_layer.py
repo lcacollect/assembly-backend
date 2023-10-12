@@ -200,12 +200,17 @@ async def add_layers_to_project_assembly(assembly: ProjectAssembly, layers: Asse
                 )
             )
         ).first()
-        layer_input = AssemblyLayerInput(**layer.dict(exclude={"assembly_id"}))
         if not epd:
             _epd = await _mutation_add_project_epds_from_epds(session, [layer.epd_id], assembly.project_id)
-            layer_input.epd_id = _epd[0].id
-        else:
-            layer_input.epd_id = epd.id
+            epd = _epd[0]
+
+        layer_input = AssemblyLayerInput(
+            **layer.dict(
+                exclude={"assembly_id", "assembly", "epd", "epd_id", "id", "transport_epd_id", "transport_epd"}
+            ),
+            epd_id=epd.id,
+        )
+
         if layer.transport_epd_id:
             transport_epd = (
                 await session.exec(

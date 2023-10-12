@@ -207,6 +207,7 @@ class GraphQLUnit(Enum):
     PCS = "PCS"
     L = "L"
     M2R1 = "M2R1"
+    TONES_KM = "TONES_KM"
     UNKNOWN = "UNKNOWN"
 
 
