@@ -1,2 +1,0 @@
-class UnknownTaskAction(Exception):
-    pass

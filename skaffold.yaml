@@ -29,10 +29,6 @@ build:
         ARTIFACTS_TOKEN_BACKEND_PACKAGES: '{{ .ARTIFACTS_TOKEN_BACKEND_PACKAGES }}'
         BUILD_STAGE: DEV
         BUILD_VERSION: DEV
-  - image: lca/rover
-    context: ../
-    docker:
-      dockerfile: ../router/Dockerfile
 manifests:
   helm:
     flags:

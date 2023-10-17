@@ -1,3 +1,8 @@
-from lcacollect_config import config
+from lcacollect_config.config import Settings
 
-settings = config.Settings()
+
+class AssemblySettings(Settings):
+    pass
+
+
+settings = AssemblySettings()

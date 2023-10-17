@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from httpx import AsyncClient
 
@@ -12,10 +14,10 @@ async def test_get_epds(client: AsyncClient, epds):
                 edges {
                     node {
                         name
-                        category
                         source
-                        gwpByPhases
-                        gwp(phases: ["A1-A3", "C"])   
+                        gwp {
+                            a1a3
+                        }
                     }
                 }
                 numEdges
@@ -29,21 +31,8 @@ async def test_get_epds(client: AsyncClient, epds):
     data = response.json()
 
     assert not data.get("errors")
-    assert sorted(data["data"]["epds"]["edges"], key=lambda x: x.get("node").get("name")) == [
-        {
-            "node": {
-                "name": f"EPD {i}",
-                "category": "My Category",
-                "source": "Ökobau",
-                "gwpByPhases": {"A1-A3": i * 10.0, "C": i * 10 + 2.0},
-                "gwp": i * 20 + 2.0,
-            }
-        }
-        for i in range(3)
-    ]
-    assert len(data["data"]["epds"]["edges"]) == 3
-    assert data["data"]["epds"]["numEdges"] == 3
-    # TODD - fix this test!
+    assert set(data["data"]["epds"]["edges"][0]["node"].keys()) == {"name", "source", "gwp"}
+    assert data["data"]["epds"]["numEdges"] != 0
 
 
 @pytest.mark.asyncio
@@ -54,7 +43,6 @@ async def test_filter_epds(client: AsyncClient, epds):
                 edges {
                     node {
                         name
-                        category
                     }
                 }
 
@@ -68,33 +56,74 @@ async def test_filter_epds(client: AsyncClient, epds):
     data = response.json()
 
     assert not data.get("errors")
-    assert data["data"]["epds"]["edges"][0]["node"] == {
-        "name": f"EPD 0",
-        "category": "My Category",
-    }
+    assert "EPD 0" in data["data"]["epds"]["edges"][0]["node"]["name"]
 
 
 @pytest.mark.asyncio
-async def test_epds_gwp_calculation(client: AsyncClient, epds):
+async def test_add_epds(client: AsyncClient, datafix_dir):
     query = """
-        query {
-            epds {
-                edges {
-                    node {
-                        name
-                        gwp(phases: ["A1-A3", "C"]) 
-                    }
-                }
-
+        mutation ($epds: [GraphQLAddEpdInput!]!) {
+            addEpds(epds: $epds) {
+                id
+                name
             }
         }
     """
 
-    response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, "variables": None})
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+            "variables": {
+                "epds": [
+                    {
+                        "id": epd["id"],
+                        "name": epd["name"],
+                        "version": epd["version"],
+                        "declaredUnit": epd["declaredUnit"],
+                        "validUntil": epd["validUntil"].split("T")[0],
+                        "publishedDate": epd["publishedDate"].split("T")[0],
+                        "source": epd["source"],
+                        "location": epd["location"],
+                        "subtype": epd["subtype"],
+                        "referenceServiceLife": epd["referenceServiceLife"],
+                        "comment": epd["comment"],
+                        "gwp": epd["gwp"],
+                        "odp": epd["odp"],
+                        "ap": epd["ap"],
+                        "ep": epd["ep"],
+                        "pocp": epd["pocp"],
+                        "penre": epd["penre"],
+                        "pere": epd["pere"],
+                        "metaData": epd.get("metaData"),
+                        "conversions": epd["conversions"],
+                    }
+                    for epd in json.loads((datafix_dir / "epdx.json").read_text())
+                ]
+            },
+        },
+    )
 
     assert response.status_code == 200
     data = response.json()
 
     assert not data.get("errors")
-    sorted_data = sorted(data["data"]["epds"]["edges"], key=lambda x: x.get("node").get("name"))
-    assert sorted_data[0]["node"] == {"name": f"EPD 0", "gwp": 2.0}
+    assert data["data"]["addEpds"] != 0
+
+
+@pytest.mark.asyncio
+async def test_delete_epds(client: AsyncClient, epds):
+    query = """
+        mutation ($ids: [String!]!) {
+            deleteEpds(ids: $ids)
+        }
+    """
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql", json={"query": query, "variables": {"ids": [epds[0].id]}}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")

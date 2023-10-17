@@ -23,9 +23,9 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from models.assembly import Assembly
+from models.assembly import ProjectAssembly
 from models.epd import EPD, ProjectEPD
-from models.links import AssemblyEPDLink
+from models.links import ProjectAssemblyEPDLink
 
 target_metadata = SQLModel.metadata
 

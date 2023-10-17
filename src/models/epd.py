@@ -1,34 +1,39 @@
 from datetime import date
-from typing import List, Optional
+from typing import TYPE_CHECKING, Optional
 
 from lcacollect_config.formatting import string_uuid
 from sqlalchemy import Column, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.orm import RelationshipProperty
 from sqlmodel import Field, Relationship, SQLModel
 
-from models.links import AssemblyEPDLink
+if TYPE_CHECKING:
+    from models.links import AssemblyEPDLink, ProjectAssemblyEPDLink
 
 
 class EPDBase(SQLModel):
     name: str = Field(index=True)
-    category: str
-    gwp_by_phases: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
-    odp_by_phases: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
-    ap_by_phases: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
-    ep_by_phases: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
-    pocp_by_phases: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
-    penre_by_phases: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
-    pere_by_phases: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
     version: str
-    unit: str | None
-    expiration_date: date
-    date_updated: date
+    declared_unit: str | None
+    valid_until: date
+    published_date: date
     source: str
-    owner: str
-    region: str
-    type: str
+    location: str
+    subtype: str
+    comment: str | None
+    is_transport: bool = False
+    reference_service_life: int | None
+    conversions: list = Field(default=list, sa_column=Column(JSON), nullable=False)
+
+    gwp: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
+    odp: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
+    ap: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
+    ep: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
+    pocp: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
+    penre: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
+    pere: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
+
     meta_fields: dict = Field(default=dict, sa_column=Column(JSON), nullable=False)
-    source_data: str | None
 
     def __repr__(self):
         return f"{self.name} - {self.version} - {self.source}"
@@ -50,6 +55,22 @@ class EPD(EPDBase, table=True):
 
     # Relationships
     project_epds: list["ProjectEPD"] = Relationship(back_populates="origin")
+    assembly_links: list["AssemblyEPDLink"] = Relationship(
+        back_populates="epd",
+        sa_relationship=RelationshipProperty(
+            "AssemblyEPDLink",
+            primaryjoin="foreign(EPD.id) == AssemblyEPDLink.epd_id",
+            uselist=True,
+        ),
+    )
+    transport_links: list["AssemblyEPDLink"] = Relationship(
+        back_populates="transport_epd",
+        sa_relationship=RelationshipProperty(
+            "AssemblyEPDLink",
+            primaryjoin="foreign(EPD.id) == AssemblyEPDLink.transport_epd_id",
+            uselist=True,
+        ),
+    )
 
 
 class ProjectEPD(EPDBase, table=True):
@@ -57,14 +78,26 @@ class ProjectEPD(EPDBase, table=True):
 
     id: Optional[str] = Field(default_factory=string_uuid, primary_key=True)
     project_id: str
-    kg_per_m3: float | None
-    kg_per_m2: float | None
-    thickness: float | None
 
     # Relationships
     origin_id: str = Field(foreign_key="epd.id")
     origin: EPD = Relationship(back_populates="project_epds")
-    assembly_links: list[AssemblyEPDLink] = Relationship(back_populates="epd")
+    assembly_links: list["ProjectAssemblyEPDLink"] = Relationship(
+        back_populates="epd",
+        sa_relationship=RelationshipProperty(
+            "ProjectAssemblyEPDLink",
+            primaryjoin="foreign(ProjectEPD.id) == ProjectAssemblyEPDLink.epd_id",
+            uselist=True,
+        ),
+    )
+    transport_links: list["AssemblyEPDLink"] = Relationship(
+        back_populates="transport_epd",
+        sa_relationship=RelationshipProperty(
+            "ProjectAssemblyEPDLink",
+            primaryjoin="foreign(ProjectEPD.id) == ProjectAssemblyEPDLink.transport_epd_id",
+            uselist=True,
+        ),
+    )
 
     @classmethod
     def create_from_epd(cls, epd: EPD, project_id: str):

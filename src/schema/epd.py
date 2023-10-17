@@ -1,10 +1,13 @@
 import base64
 import logging
 from datetime import date
-from typing import Optional
+from enum import Enum
+from typing import TYPE_CHECKING, Annotated, Optional
 
 import strawberry
+from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
+from lcacollect_config.formatting import string_uuid
 from lcacollect_config.graphql.input_filters import filter_model_query, sort_model_query
 from lcacollect_config.graphql.pagination import Connection, Cursor, Edge, PageInfo
 from sqlalchemy import func
@@ -14,27 +17,28 @@ from strawberry.scalars import JSON
 from strawberry.types import Info
 
 import models.epd as models_epd
-import schema.assembly as schema_assembly
 from schema.directives import Keys
 from schema.inputs import EPDFilters, EPDSort, ProjectEPDFilters
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from graphql_types.assembly import GraphQLProjectAssembly
 
 
 async def epds_query(
     info: Info,
     filters: Optional[EPDFilters] = None,
     sort_by: Optional[EPDSort] = None,
-    count: int = 50,
+    count: int | None = 50,
     after: Optional[Cursor] = UNSET,
 ) -> Connection["GraphQLEPD"]:
     """
     Query the database for EPD entries.
     This query is paginated.
-    The pagination inspiration source is from Strawberry's docs: https://strawberry.rocks/docs/guides/pagination
     """
 
-    session = info.context.get("session")
+    session = get_session(info)
 
     # Build EPD query
     query = select(models_epd.EPD)
@@ -48,7 +52,8 @@ async def epds_query(
     after = after if after is not UNSET else None
     if after:
         query = query.where(models_epd.EPD.id > after)
-    query = query.limit(count + 1)
+    if count:
+        query = query.limit(count + 1)
     if sort_by:
         query = sort_model_query(models_epd.EPD, sort_by, query=query)
     else:
@@ -56,10 +61,16 @@ async def epds_query(
 
     epds = (await session.exec(query)).all()
     edges = [Edge(node=epd, cursor=epd.id) for epd in epds]
+    if not edges:
+        return Connection(
+            page_info=PageInfo(has_previous_page=False, has_next_page=False, start_cursor=None, end_cursor=None),
+            edges=[],
+            num_edges=0,
+        )
 
     # Get the end cursor
     end_cursor = None
-    if len(edges) > count:
+    if not count or len(edges) > count:
         end_cursor = edges[-1].cursor
     elif len(edges) > 1:
         end_cursor = edges[-2].cursor
@@ -67,12 +78,12 @@ async def epds_query(
     return Connection(
         page_info=PageInfo(
             has_previous_page=False,
-            has_next_page=total_count > count,
+            has_next_page=False if not count else total_count > count,
             start_cursor=edges[0].cursor if edges else None,
             end_cursor=end_cursor,
         ),
         edges=edges[:-1]
-        if len(edges) > count
+        if count and len(edges) > count
         else edges,  # exclude last one as it was fetched to know if there is a next page
         num_edges=total_count,
     )
@@ -85,8 +96,12 @@ def build_epd_cursor(epd: models_epd.EPD):
 async def project_epds_query(
     info: Info, project_id: str, filters: Optional[ProjectEPDFilters] = None
 ) -> list["GraphQLProjectEPD"]:
-    session = info.context.get("session")
+    """Query the database for EPD entries for a specific project."""
+
+    session = get_session(info)
+
     query = select(models_epd.ProjectEPD).where(models_epd.ProjectEPD.project_id == project_id)
+
     if not filters:
         epds = await session.exec(query)
         return epds.all()
@@ -96,103 +111,243 @@ async def project_epds_query(
         return epds.all()
 
 
-async def add_project_epd_mutation(info: Info, project_id: str, origin_id: str) -> "GraphQLProjectEPD":
-    session = info.context.get("session")
+async def add_project_epds_mutation(info: Info, project_id: str, epd_ids: list[str]) -> list["GraphQLProjectEPD"]:
+    """Add Global EPDs to a project."""
+    session = get_session(info)
 
-    epd = await session.get(models_epd.EPD, origin_id)
-    if not epd:
-        raise DatabaseItemNotFound(f"Could not find EPD with id: {origin_id}")
-
-    project_epd = models_epd.ProjectEPD.create_from_epd(epd, project_id=project_id)
-    session.add(project_epd)
-
-    await session.commit()
-    await session.refresh(project_epd)
-    return project_epd
+    return await _mutation_add_project_epds_from_epds(session, epd_ids, project_id)
 
 
-async def update_project_epd_mutation(
-    info: Info,
-    id: str,
-    kg_per_m3: float | None = None,
-    kg_per_m2: float | None = None,
-    thickness: float | None = None,
-) -> "GraphQLProjectEPD":
-    session = info.context.get("session")
-    project_epd = await session.get(models_epd.ProjectEPD, id)
-    if not project_epd:
-        raise DatabaseItemNotFound(f"Could not find Project EPD with id: {id}")
+async def _mutation_add_project_epds_from_epds(session, epd_ids, project_id):
+    """Abstracted function for adding project epds from epds."""
 
-    kwargs = {"kg_per_m3": kg_per_m3, "kg_per_m2": kg_per_m2, "thickness": thickness}
-    for key, value in kwargs.items():
-        if value:
-            setattr(project_epd, key, value)
+    project_epds = []
+    for origin_id in epd_ids:
+        epd = await session.get(models_epd.EPD, origin_id)
+        if not epd:
+            raise DatabaseItemNotFound(f"Could not find EPD with id: {origin_id}")
 
-    session.add(project_epd)
+        project_epd = models_epd.ProjectEPD.create_from_epd(epd, project_id=project_id)
+        project_epds.append(project_epd)
+        session.add(project_epd)
 
     await session.commit()
-    await session.refresh(project_epd)
-    return project_epd
+    [await session.refresh(project_epd) for project_epd in project_epds]
+    return project_epds
 
 
-async def delete_project_epd_mutation(info: Info, id: str) -> str:
+async def delete_project_epds_mutation(info: Info, ids: list[str]) -> list[str]:
     """Delete a project EPD"""
 
-    session = info.context.get("session")
-    project_epd = await session.get(models_epd.ProjectEPD, id)
+    session = get_session(info)
+    for _id in ids:
+        project_epd = await session.get(models_epd.ProjectEPD, _id)
+        await session.delete(project_epd)
 
-    await session.delete(project_epd)
     await session.commit()
-    return id
+    return ids
+
+
+async def add_epds_mutation(info: Info, epds: list["GraphQLAddEpdInput"]) -> list["GraphQLEPD"]:
+    """Add Global EPDs."""
+    session = get_session(info)
+
+    _epds = []
+    for epd_input in epds:
+        epd = models_epd.EPD(
+            id=epd_input.id if epd_input.id else string_uuid(),
+            name=epd_input.name,
+            version=epd_input.version,
+            declared_unit=epd_input.declared_unit.value.lower(),
+            valid_until=epd_input.valid_until,
+            published_date=epd_input.published_date,
+            source=epd_input.source.get("name"),
+            location=epd_input.location,
+            subtype=epd_input.subtype,
+            reference_service_life=epd_input.reference_service_life,
+            comment=epd_input.comment,
+            gwp=epd_input.gwp,
+            odp=epd_input.odp,
+            ap=epd_input.ap,
+            ep=epd_input.ep,
+            pocp=epd_input.pocp,
+            penre=epd_input.penre,
+            pere=epd_input.pere,
+            meta_fields=epd_input.meta_data,
+            is_transport=epd_input.meta_data.get("isTransport", False) if epd_input.meta_data else False,
+            conversions=epd_input.conversions,
+        )
+        _epds.append(epd)
+        session.add(epd)
+
+    await session.commit()
+    [await session.refresh(epd) for epd in _epds]
+    return _epds
+
+
+async def delete_epds_mutation(info: Info, ids: list[str]) -> list[str]:
+    """Delete a global EPD"""
+
+    session = get_session(info)
+    for _id in ids:
+        project_epd = await session.get(models_epd.EPD, _id)
+        await session.delete(project_epd)
+
+    await session.commit()
+    return ids
+
+
+@strawberry.enum
+class GraphQLUnit(Enum):
+    M = "M"
+    M2 = "M2"
+    M3 = "M3"
+    KG = "KG"
+    TONES = "TONES"
+    PCS = "PCS"
+    L = "L"
+    M2R1 = "M2R1"
+    TONES_KM = "TONES_KM"
+    UNKNOWN = "UNKNOWN"
+
+
+@strawberry.type
+class GraphQLConversion:
+    to: GraphQLUnit
+    value: float
+
+
+@strawberry.type
+class GraphQLImpactCategories:
+    a1a3: float | None
+    a4: float | None
+    a5: float | None
+    b1: float | None
+    b2: float | None
+    b3: float | None
+    b4: float | None
+    b5: float | None
+    b6: float | None
+    b7: float | None
+    c1: float | None
+    c2: float | None
+    c3: float | None
+    c4: float | None
+    d: float | None
+
+
+@strawberry.enum
+class GraphQLImpactCategory(Enum):
+    a1a3 = "a1a3"
+    a4 = "a4"
+    a5 = "a5"
+    b1 = "b1"
+    b2 = "b2"
+    b3 = "b3"
+    b4 = "b4"
+    b5 = "b5"
+    b6 = "b6"
+    b7 = "b7"
+    c1 = "c1"
+    c2 = "c2"
+    c3 = "c3"
+    c4 = "c4"
+    d = "d"
+
+
+@strawberry.input
+class GraphQLSource:
+    name: str
+    url: str | None = None
+
+
+@strawberry.input
+class GraphQLAddEpdInput:
+    id: str | None = None
+    name: str
+    version: str
+    declared_unit: GraphQLUnit
+    valid_until: date
+    published_date: date
+    source: JSON
+    location: str
+    subtype: str
+    reference_service_life: int | None = None
+    comment: str | None = None
+    gwp: JSON | None = None
+    odp: JSON | None = None
+    ap: JSON | None = None
+    ep: JSON | None = None
+    pocp: JSON | None = None
+    penre: JSON | None = None
+    pere: JSON | None = None
+    meta_data: JSON | None = None
+    conversions: JSON | None = None
 
 
 @strawberry.type
 class GraphQLEPDBase:
     id: str
     name: str
-    category: str
-    gwp_by_phases: JSON
-    odp_by_phases: JSON
-    ap_by_phases: JSON
-    ep_by_phases: JSON
-    pocp_by_phases: JSON
-    penre_by_phases: JSON
-    pere_by_phases: JSON
     version: str
-    unit: str | None
-    expiration_date: date
-    date_updated: date
+    declared_unit: str | None
+    valid_until: date
+    published_date: date
     source: str
-    source_data: str
-    owner: str
-    region: str
-    type: str
+    location: str
+    subtype: str
+    is_transport: bool = False
+    reference_service_life: int | None
+    comment: str | None
+    meta_fields: JSON | None
 
     @strawberry.field
-    def gwp(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.gwp_by_phases, phases)
+    def conversions(self) -> list[GraphQLConversion]:
+        if not self.conversions:
+            return []
+        return [GraphQLConversion(**conversion) for conversion in self.conversions]
 
     @strawberry.field
-    def odp(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.odp_by_phases, phases)
+    def gwp(self) -> GraphQLImpactCategories | None:
+        if not self.gwp:
+            return None
+        return GraphQLImpactCategories(**self.gwp)
 
     @strawberry.field
-    def ap(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.ap_by_phases, phases)
+    def odp(self) -> GraphQLImpactCategories | None:
+        if not self.odp:
+            return None
+        return GraphQLImpactCategories(**self.odp)
 
     @strawberry.field
-    def ep(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.ep_by_phases, phases)
+    def ap(self) -> GraphQLImpactCategories | None:
+        if not self.ap:
+            return None
+        return GraphQLImpactCategories(**self.ap)
 
     @strawberry.field
-    def pocp(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.pocp_by_phases, phases)
+    def ep(self) -> GraphQLImpactCategories | None:
+        if not self.ep:
+            return None
+        return GraphQLImpactCategories(**self.ep)
 
-    def penre(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.penre_by_phases, phases)
+    @strawberry.field
+    def pocp(self) -> GraphQLImpactCategories | None:
+        if not self.pocp:
+            return None
+        return GraphQLImpactCategories(**self.pocp)
 
-    def pere(self, phases: list[str] | None = None) -> float:
-        return schema_assembly.calculate_indicator(self.pere_by_phases, phases)
+    @strawberry.field
+    def penre(self) -> GraphQLImpactCategories | None:
+        if not self.penre:
+            return None
+        return GraphQLImpactCategories(**self.penre)
+
+    @strawberry.field
+    def pere(self) -> GraphQLImpactCategories | None:
+        if not self.pere:
+            return None
+        return GraphQLImpactCategories(**self.pere)
 
 
 @strawberry.type
@@ -203,9 +358,6 @@ class GraphQLEPD(GraphQLEPDBase):
 @strawberry.federation.type(directives=[Keys(fields="project_id")])
 class GraphQLProjectEPD(GraphQLEPDBase):
     origin_id: str
-    kg_per_m3: float | None
-    kg_per_m2: float | None
-    thickness: float | None
 
-    assemblies: list["schema_assembly.GraphQLAssembly"] | None
-    project_id: strawberry.ID = strawberry.federation.field(external=True)
+    assemblies: list[Annotated["GraphQLProjectAssembly", strawberry.lazy("graphql_types.assembly")]] | None
+    project_id: strawberry.ID = strawberry.federation.field(shareable=True)
