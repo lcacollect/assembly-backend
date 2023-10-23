@@ -123,3 +123,5 @@ cython_debug/
 **/helm/*.tgz
 
 /test-output.xml
+/assembly_dump.sql
+/clear_db.sh
