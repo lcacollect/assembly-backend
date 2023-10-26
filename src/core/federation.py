@@ -12,6 +12,7 @@ import models.links as models_links
 from core.config import settings
 from core.exceptions import MicroServiceConnectionError, MicroServiceResponseError
 from graphql_types.assembly import GraphQLProjectAssembly
+from schema.assembly import assembly_query_options
 
 
 async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLProjectAssembly | None:
@@ -22,12 +23,11 @@ async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLProje
         session = get_session(info)
 
         query = select(models_assembly.ProjectAssembly).where(models_assembly.ProjectAssembly.id == root.assembly_id)
-        query = query.options(
-            selectinload(models_assembly.ProjectAssembly.layers).options(
-                selectinload(models_links.ProjectAssemblyEPDLink.epd)
-            )
-        )
+        category_field = [field for field in info.selected_fields if field.name == "assembly"]
+        query = await assembly_query_options(query, category_field, models_assembly.ProjectAssembly, models_links.ProjectAssemblyEPDLink)
+
         element = (await session.exec(query)).first()
+
         if element:
             return GraphQLProjectAssembly(
                 id=element.id,
