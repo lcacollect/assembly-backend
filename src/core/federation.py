@@ -24,7 +24,9 @@ async def get_assembly(info: Info, root: "GraphQLSchemaElement") -> GraphQLProje
 
         query = select(models_assembly.ProjectAssembly).where(models_assembly.ProjectAssembly.id == root.assembly_id)
         category_field = [field for field in info.selected_fields if field.name == "assembly"]
-        query = await assembly_query_options(query, category_field, models_assembly.ProjectAssembly, models_links.ProjectAssemblyEPDLink)
+        query = await assembly_query_options(
+            query, category_field, models_assembly.ProjectAssembly, models_links.ProjectAssemblyEPDLink
+        )
 
         element = (await session.exec(query)).first()
 
