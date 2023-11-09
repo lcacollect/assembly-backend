@@ -5,7 +5,7 @@ from lcacollect_config.connection import create_postgres_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 max_tries = 60 * 5  # 5 minutes
