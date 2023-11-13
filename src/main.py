@@ -9,6 +9,7 @@ from core.config import settings
 from initial_data.load_tabel7 import load as load_table_7_epds
 from routes import graphql_app
 
+
 if settings.SERVER_NAME != "LCA Test":
     logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
