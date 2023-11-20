@@ -98,7 +98,7 @@ async def test_add_epds(client: AsyncClient, datafix_dir):
                         "metaData": epd.get("metaData"),
                         "conversions": epd["conversions"],
                     }
-                    for epd in json.loads((datafix_dir / "epdx.json").read_text())
+                    for epd in json.loads((datafix_dir / "epds.json").read_text())
                 ]
             },
         },
